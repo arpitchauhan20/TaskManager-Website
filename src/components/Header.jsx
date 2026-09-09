@@ -115,6 +115,26 @@ export default function Header({
           <span>🔔</span>
         </button>
 
+        {/* Instant Refresh Button */}
+        <button
+          type="button"
+          className="control-btn refresh-btn"
+          onClick={() => {
+            if ('caches' in window) {
+              caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+              });
+            }
+            window.location.reload();
+          }}
+          title="Refresh Application (Hard Reload)"
+          aria-label="Refresh Application"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+
         {/* Add Task Button */}
         <button
           type="button"

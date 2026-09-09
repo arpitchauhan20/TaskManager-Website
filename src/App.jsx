@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -84,6 +84,53 @@ export default function App() {
 
   const [pushSub, setPushSub] = useState(null);
 
+  // Mobile Pull-to-Refresh Gesture
+  const scrollRef = useRef(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const isPulling = useRef(false);
+
+  const handleTouchStart = (e) => {
+    if (scrollRef.current && scrollRef.current.scrollTop <= 0) {
+      touchStartY.current = e.touches[0].clientY;
+      isPulling.current = true;
+    } else {
+      isPulling.current = false;
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isPulling.current || isRefreshing) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY.current;
+    if (diff > 0 && scrollRef.current && scrollRef.current.scrollTop <= 0) {
+      const dampened = Math.min(diff * 0.4, 75);
+      setPullDistance(dampened);
+    } else {
+      setPullDistance(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isPulling.current) return;
+    isPulling.current = false;
+    if (pullDistance >= 48) {
+      setIsRefreshing(true);
+      setPullDistance(48);
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      setTimeout(() => {
+        window.location.reload();
+      }, 350);
+    } else {
+      setPullDistance(0);
+    }
+  };
+
   // Initialize Web Push Notifications & Background Service Worker
   useEffect(() => {
     initPushSubscription().then(sub => {
@@ -142,6 +189,25 @@ export default function App() {
               });
             } catch (e) {}
           }
+
+          // Automated email alert dispatched exactly when scheduled reminder time arrives
+          if (task.channels?.email && (task.reminderEmail || reminderEmail) && !task.reminderEmailSent) {
+            task.reminderEmailSent = true;
+            const target = task.reminderEmail || reminderEmail;
+            sendTaskEmail({
+              taskId: task.id,
+              recipient: target,
+              title: task.title,
+              description: task.description,
+              deadline: task.deadline,
+              priority: task.priority,
+              reminderTime: reminderMs
+            }).then(res => {
+              if (res?.success) {
+                showToast('success', '📧', `Reminder email sent to ${target}!`);
+              }
+            });
+          }
         }
 
         // 2. In-App Deadline Reached Alert
@@ -175,7 +241,7 @@ export default function App() {
 
     const intervalId = setInterval(checkReminders, 2000);
     return () => clearInterval(intervalId);
-  }, [tasks, soundEnabled, showToast]);
+  }, [tasks, soundEnabled, showToast, reminderEmail]);
 
   // Instant Alert Notification & Audio Bell Test Handler
   const handleTestAlerts = async () => {
@@ -357,9 +423,17 @@ export default function App() {
   };
 
   const handleSaveTask = (taskData) => {
+    const remMs = calculateReminderTimeMs(taskData);
+    const isFutureReminder = remMs && remMs > Date.now();
+
     let savedTask;
     if (taskToEdit) {
-      savedTask = { ...taskToEdit, ...taskData };
+      savedTask = {
+        ...taskToEdit,
+        ...taskData,
+        reminderAlertTriggered: isFutureReminder ? false : taskToEdit.reminderAlertTriggered,
+        reminderEmailSent: isFutureReminder ? false : taskToEdit.reminderEmailSent
+      };
       setTasks(prev =>
         prev.map(t => (t.id === taskToEdit.id ? savedTask : t))
       );
@@ -368,6 +442,8 @@ export default function App() {
       savedTask = {
         id: 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
         ...taskData,
+        reminderAlertTriggered: false,
+        reminderEmailSent: false,
         completed: false,
         createdAt: new Date().toISOString()
       };
@@ -375,25 +451,30 @@ export default function App() {
       showToast('success', '✨', `"${taskData.title}" saved`);
     }
 
-    // 1. Sync persistent background reminder to server (fires even when browser is closed & phone locked)
+    // 1. Sync persistent background reminder to server (fires when scheduled time arrives)
     scheduleBackendReminder(savedTask, {
       subscription: pushSub,
       defaultWhatsApp: whatsappNumber,
       defaultEmail: reminderEmail
     }).then(res => {
       if (res?.success) {
-        showToast('info', '⏰', 'Background alert scheduled (works even with app closed)');
+        showToast('info', '⏰', 'Background alert scheduled');
       }
     });
 
-    // 2. Automatically save event in Google Calendar
+    // 2. Automatically save event in Google Calendar if user checked calendar channel
     if (taskData.channels?.calendar && savedTask.deadline) {
       openGoogleCalendar(savedTask);
       showToast('success', '📅', 'Opening Google Calendar with pre-filled event...');
     }
 
-    // 3. Automated Resend Email dispatch (with RFC 5545 .ics calendar invite attached)
-    if ((taskData.channels?.email || taskData.channels?.calendar) && (taskData.reminderEmail || reminderEmail)) {
+    // 3. Email Reminder Handling:
+    // If reminder is scheduled in the future (e.g. 22:20), it will dispatch at that exact time!
+    if (isFutureReminder && taskData.channels?.email) {
+      const formattedTime = new Date(remMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      showToast('info', '⏰', `Email reminder scheduled for ${formattedTime}`);
+    } else if (!isFutureReminder && taskData.channels?.email && (taskData.reminderEmail || reminderEmail)) {
+      // Only dispatch immediately if the reminder time is already due or in the past
       const target = taskData.reminderEmail || reminderEmail;
       sendTaskEmail({
         taskId: savedTask.id,
@@ -401,10 +482,12 @@ export default function App() {
         title: savedTask.title,
         description: savedTask.description,
         deadline: savedTask.deadline,
-        priority: savedTask.priority
+        priority: savedTask.priority,
+        reminderTime: remMs
       }).then(res => {
         if (res.success) {
-          showToast('success', '📧', `Email & Google Calendar invite sent via Resend to ${target}!`);
+          savedTask.reminderEmailSent = true;
+          showToast('success', '📧', `Reminder email sent to ${target}!`);
         }
       });
     }
@@ -548,8 +631,28 @@ export default function App() {
           onTestAlerts={handleTestAlerts}
         />
 
-        {/* Scrollable Canvas Area */}
-        <div className="main-content-scroll">
+        {/* Scrollable Canvas Area with Mobile Pull-to-Refresh */}
+        <div
+          ref={scrollRef}
+          className="main-content-scroll"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Mobile Pull-to-Refresh Visual Indicator */}
+          {pullDistance > 0 && (
+            <div
+              className={`pull-indicator ${pullDistance >= 48 ? 'ready' : ''} ${isRefreshing ? 'refreshing' : ''}`}
+              style={{ height: `${pullDistance}px` }}
+            >
+              <div className="pull-indicator-pill">
+                <span className={`pull-icon ${isRefreshing ? 'spinning' : ''}`}>🔄</span>
+                <span className="pull-text">
+                  {isRefreshing ? 'Refreshing application...' : pullDistance >= 48 ? 'Release to refresh' : 'Pull down to refresh'}
+                </span>
+              </div>
+            </div>
+          )}
           {/* Canvas Hero & Metrics Strip */}
           <StatCards
             userName={userName}
