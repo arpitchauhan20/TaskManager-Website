@@ -1,17 +1,18 @@
 const { Resend } = require('resend');
 
-// Helper: RFC 5545 iCalendar Invitation generator setting ONLY the reminder date and time
+// Helper: RFC 5545 iCalendar Invitation setting the DEADLINE date and time with reminder VALARM
 function generateICSInvite(task) {
   const formatICSDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
   const now = new Date();
 
   const deadlineStart = task.deadline ? new Date(task.deadline) : new Date(now.getTime() + 3600000);
+  const deadlineEnd = new Date(deadlineStart.getTime() + 30 * 60 * 1000); // 30 min duration
   const taskId = task.taskId || task.id || Date.now();
   const cleanTitle = (task.title || 'Task Reminder').replace(/[\r\n]/g, ' ');
   const cleanDesc = (task.description || '').replace(/\r?\n/g, '\\n');
   const priorityStr = (task.priority || 'medium').toUpperCase();
 
-  // Calculate reminder event timing (only reminder date & time is scheduled in calendar)
+  // Calculate reminder timing to set accurate alarm offset before deadline
   let reminderStartMs = task.reminderTime;
   if (!reminderStartMs) {
     if (task.reminderMode === 'preset') {
@@ -28,35 +29,46 @@ function generateICSInvite(task) {
       reminderStartMs = deadlineStart.getTime() - 15 * 60000; // Default 15 min before
     }
   }
-  const reminderStart = new Date(reminderStartMs);
-  const reminderEnd = new Date(reminderStart.getTime() + 30 * 60 * 1000); // 30 min duration
+
+  // Calculate alarm trigger offset in minutes before deadline
+  const offsetMinutes = Math.max(0, Math.round((deadlineStart.getTime() - reminderStartMs) / 60000));
 
   return [
     'BEGIN:VCALENDAR',
-    'PRODID:-//TaskFlow Pro//Reminder Calendar Engine//EN',
+    'PRODID:-//TaskFlow Pro//Deadline Calendar Engine//EN',
     'VERSION:2.0',
     'CALSCALE:GREGORIAN',
-    'METHOD:REQUEST',
+    'METHOD:PUBLISH',
 
-    // --- SCHEDULED REMINDER EVENT ONLY ---
+    // --- SCHEDULED DEADLINE EVENT WITH EMBEDDED REMINDER ALARM ---
     'BEGIN:VEVENT',
     `UID:taskflow_${taskId}@taskflow.pro`,
     `DTSTAMP:${formatICSDate(now)}`,
-    `DTSTART:${formatICSDate(reminderStart)}`,
-    `DTEND:${formatICSDate(reminderEnd)}`,
-    `SUMMARY:⏰ Reminder: ${cleanTitle}`,
-    `DESCRIPTION:TaskFlow Reminder for "${cleanTitle}"\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}`,
+    `DTSTART:${formatICSDate(deadlineStart)}`,
+    `DTEND:${formatICSDate(deadlineEnd)}`,
+    `SUMMARY:🎯 Deadline: ${cleanTitle}`,
+    `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}\\n\\nManaged via TaskFlow Pro`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
     'BEGIN:VALARM',
-    'TRIGGER:-PT0M',
+    `TRIGGER:-PT${offsetMinutes}M`,
     'ACTION:DISPLAY',
-    `DESCRIPTION:Reminder: ${cleanTitle}`,
+    `DESCRIPTION:Reminder: ${cleanTitle} (Deadline: ${deadlineStart.toLocaleTimeString()})`,
     'END:VALARM',
     'END:VEVENT',
 
     'END:VCALENDAR'
   ].join('\r\n');
+}
+
+// Helper to generate direct 1-click Google Calendar URL for the deadline date and time
+function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd) {
+  const formatGCalDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+  const title = encodeURIComponent(`🎯 Deadline: ${task.title || 'Task Reminder'}`);
+  const details = encodeURIComponent(
+    `Task: ${task.title || ''}\nDeadline: ${deadlineStart.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via TaskFlow Pro: https://task-manager-website-psi.vercel.app`
+  );
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
 }
 
 module.exports = async function handler(req, res) {
@@ -78,7 +90,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { recipient, title, description, deadline, priority, isTest } = req.body || {};
+  const { recipient, title, description, deadline, priority, reminderTime, isTest } = req.body || {};
   const targetRecipient = recipient || 'arpitchauhan5586@gmail.com';
 
   const apiKey = process.env.RESEND_API_KEY;
@@ -94,34 +106,65 @@ module.exports = async function handler(req, res) {
     title: title || 'TaskFlow Pro Live Test',
     description: description || '',
     deadline: deadline || new Date(Date.now() + 3600000).toISOString(),
-    priority: priority || 'high'
+    priority: priority || 'high',
+    reminderTime: reminderTime
   };
+
+  const deadlineStart = new Date(taskObj.deadline);
+  const deadlineEnd = new Date(deadlineStart.getTime() + 30 * 60 * 1000);
+  const gcalUrl = getGoogleCalendarUrl(taskObj, deadlineStart, deadlineEnd);
 
   const icsContent = generateICSInvite(taskObj);
   const icsBase64 = Buffer.from(icsContent).toString('base64');
-  const deadlineStr = taskObj.deadline ? new Date(taskObj.deadline).toLocaleString() : 'Not specified';
+  const deadlineStr = taskObj.deadline ? deadlineStart.toLocaleString() : 'Not specified';
   const priorityStr = (taskObj.priority || 'medium').toUpperCase();
 
+  let remMs = taskObj.reminderTime;
+  if (!remMs) {
+    remMs = deadlineStart.getTime() - 15 * 60000;
+  }
+  const reminderStr = new Date(remMs).toLocaleString();
+
   const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; background: #0f172a; color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #334155;">
-      <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 22px 28px;">
-        <h1 style="margin: 0; font-size: 20px; color: #ffffff; font-weight: 700;">TaskFlow Pro Reminder</h1>
-        <p style="margin: 4px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.88);">Automated Notification & Google Calendar Event</p>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; border-radius: 14px; overflow: hidden; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 24px 30px;">
+        <h1 style="margin: 0; font-size: 22px; color: #ffffff; font-weight: 700; letter-spacing: -0.02em;">TaskFlow Pro Reminder</h1>
+        <p style="margin: 6px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.85);">Task Reminder & Google Calendar Sync</p>
       </div>
-      <div style="padding: 24px 28px;">
-        <div style="background: #1e293b; border-radius: 8px; padding: 18px 20px; border-left: 4px solid #6366f1; margin-bottom: 20px;">
-          <h2 style="margin: 0 0 8px 0; font-size: 17px; color: #f1f5f9;">${taskObj.title}</h2>
-          ${taskObj.description ? `<p style="margin: 0 0 10px 0; font-size: 13px; color: #94a3b8;">${taskObj.description}</p>` : ''}
-          <div style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
-            <p style="margin: 4px 0;"><strong>📅 Deadline:</strong> ${deadlineStr}</p>
+
+      <div style="padding: 26px 30px;">
+        <!-- Task Details Card -->
+        <div style="background: #1e293b; border-radius: 10px; padding: 20px 22px; border-left: 4px solid #6366f1; margin-bottom: 22px;">
+          <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #f8fafc; font-weight: 600;">${taskObj.title}</h2>
+          ${taskObj.description ? `<p style="margin: 0 0 14px 0; font-size: 14px; color: #94a3b8; line-height: 1.5;">${taskObj.description}</p>` : ''}
+          <div style="font-size: 13px; color: #cbd5e1; line-height: 1.7;">
+            <p style="margin: 4px 0;"><strong>🎯 Deadline:</strong> <span style="color: #38bdf8; font-weight: 600;">${deadlineStr}</span></p>
+            <p style="margin: 4px 0;"><strong>⏰ Reminder Alert:</strong> <span style="color: #f43f5e; font-weight: 600;">${reminderStr}</span></p>
             <p style="margin: 4px 0;"><strong>⚡ Priority:</strong> <span style="font-weight: 700; color: #f59e0b;">${priorityStr}</span></p>
           </div>
         </div>
-        <div style="background: rgba(37, 211, 102, 0.08); border: 1px solid rgba(37, 211, 102, 0.3); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #4ade80;">
-          📅 <strong>Google Calendar Sync:</strong> An invite (.ics) is attached to this email. Google Calendar will automatically add this event to your calendar.
+
+        <!-- 1-Click Option: Set Reminder on Google Calendar -->
+        <div style="background: #131d31; border: 1px solid #283756; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 20px;">
+          <p style="margin: 0 0 14px 0; font-size: 14px; color: #cbd5e1; font-weight: 500;">
+            Set this task and reminder on your calendar for the deadline:
+          </p>
+          <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #ffffff; font-weight: 600; font-size: 14px; padding: 12px 26px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+            📅 Set Reminder on Calendar for Deadline
+          </a>
+          <p style="margin: 10px 0 0 0; font-size: 11px; color: #64748b;">
+            Click above to open Google Calendar with deadline date (${deadlineStr}) & reminder alert
+          </p>
+        </div>
+
+        <div style="background: rgba(37, 211, 102, 0.08); border: 1px solid rgba(37, 211, 102, 0.25); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #4ade80;">
+          📎 <strong>Calendar File (.ics):</strong> An invitation file is also attached to sync directly with Apple Calendar, Google Calendar, or Outlook.
         </div>
       </div>
-      <div style="background: #090d16; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">
+
+      <!-- Footer -->
+      <div style="background: #090d16; padding: 16px 30px; font-size: 11px; color: #64748b; text-align: center;">
         Sent automatically by TaskFlow Pro • <a href="https://task-manager-website-psi.vercel.app" style="color: #818cf8; text-decoration: none;">task-manager-website-psi.vercel.app</a>
       </div>
     </div>
