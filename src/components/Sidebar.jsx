@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export default function Sidebar({
   isOpen,
@@ -25,6 +25,26 @@ export default function Sidebar({
     { id: 'completed', label: 'Completed', icon: '✅', count: taskCounts.completed }
   ];
 
+  // Close sidebar on Escape and lock body scroll on mobile/tablet when open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen, onClose]);
+
   return (
     <>
       <aside className={`app-sidebar ${isCollapsed ? 'collapsed' : ''} ${isOpen ? 'open' : ''}`} id="app-sidebar">
@@ -39,8 +59,17 @@ export default function Sidebar({
               <div className="brand-workspace">Executive Suite</div>
             </div>
           </div>
-          <button type="button" className="sidebar-close-btn" onClick={onClose} title="Close Menu">
-            ✕
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            onClick={onClose}
+            title="Close Menu"
+            aria-label="Close navigation menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
@@ -67,13 +96,20 @@ export default function Sidebar({
         </nav>
 
         {/* Spacer */}
-        <div style={{ flex: 1 }} />
+        <div style={{ flex: 1, minHeight: '12px' }} />
 
         {/* Sidebar Footer */}
         <div className="sidebar-footer">
           {/* User Profile */}
           <div className="footer-user-row">
-            <div className="user-pill" onClick={onOpenSettings} title="Click to open Settings & Automation">
+            <div
+              className="user-pill"
+              onClick={() => {
+                onOpenSettings();
+                onClose();
+              }}
+              title="Click to open Settings & Automation"
+            >
               <div className="user-avatar">
                 {(userName || 'U').charAt(0).toUpperCase()}
               </div>
@@ -132,8 +168,12 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* Mobile Backdrop */}
-      {isOpen && <div className="sidebar-backdrop active" onClick={onClose} />}
+      {/* Mobile / Tablet Backdrop */}
+      <div
+        className={`sidebar-backdrop ${isOpen ? 'active' : ''}`}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      />
     </>
   );
 }

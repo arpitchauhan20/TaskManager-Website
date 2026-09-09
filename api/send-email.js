@@ -71,6 +71,44 @@ function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd) {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
 }
 
+// Helper: Sanitize & format Resend 'from' address to prevent 422 validation errors
+function resolveFromEmail(raw) {
+  const fallback = 'TaskFlow Pro <onboarding@resend.dev>';
+  if (!raw || typeof raw !== 'string') return fallback;
+
+  let cleaned = raw.trim();
+  // Strip leading variable assignment if user pasted 'FROM_EMAIL=...' in Vercel value field
+  if (cleaned.startsWith('FROM_EMAIL=')) {
+    cleaned = cleaned.replace(/^FROM_EMAIL=/, '').trim();
+  }
+  // Strip surrounding quotes or backticks (", ', `)
+  cleaned = cleaned.replace(/^["'`]+|["'`]+$/g, '').trim();
+
+  if (!cleaned) return fallback;
+
+  // Pattern 1: Name <email@domain.com>
+  const matchWithAngle = cleaned.match(/^([^<]*)<([^>]+)>$/);
+  if (matchWithAngle) {
+    const name = matchWithAngle[1].trim();
+    const email = matchWithAngle[2].trim();
+    if (email && email.includes('@')) {
+      return name ? `${name} <${email}>` : email;
+    }
+  }
+
+  // Pattern 2: Pure email address without angle brackets: email@domain.com
+  if (cleaned.includes('@') && !cleaned.includes('<') && !cleaned.includes('>')) {
+    return `TaskFlow Pro <${cleaned}>`;
+  }
+
+  // Pattern 3: User only entered a name without an email address
+  if (!cleaned.includes('@')) {
+    return `${cleaned} <onboarding@resend.dev>`;
+  }
+
+  return fallback;
+}
+
 module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -93,8 +131,9 @@ module.exports = async function handler(req, res) {
   const { recipient, title, description, deadline, priority, reminderTime, isTest } = req.body || {};
   const targetRecipient = recipient || 'arpitchauhan5586@gmail.com';
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.FROM_EMAIL || 'TaskFlow Pro <onboarding@resend.dev>';
+  const rawApiKey = process.env.RESEND_API_KEY || '';
+  const apiKey = rawApiKey.trim().replace(/^["'`]+|["'`]+$/g, '');
+  const fromEmail = resolveFromEmail(process.env.FROM_EMAIL);
 
   if (!apiKey) {
     return res.status(500).json({ error: 'RESEND_API_KEY is not configured in environment variables' });

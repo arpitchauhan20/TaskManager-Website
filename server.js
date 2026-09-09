@@ -15,9 +15,33 @@ const calendarFeedHandler = require('./api/calendar');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Helper: Sanitize Resend 'from' address
+function resolveFromEmail(raw) {
+  const fallback = 'TaskFlow Pro <onboarding@resend.dev>';
+  if (!raw || typeof raw !== 'string') return fallback;
+  let cleaned = raw.trim();
+  if (cleaned.startsWith('FROM_EMAIL=')) cleaned = cleaned.replace(/^FROM_EMAIL=/, '').trim();
+  cleaned = cleaned.replace(/^["'`]+|["'`]+$/g, '').trim();
+  if (!cleaned) return fallback;
+  const match = cleaned.match(/^([^<]*)<([^>]+)>$/);
+  if (match) {
+    const name = match[1].trim();
+    const email = match[2].trim();
+    if (email && email.includes('@')) return name ? `${name} <${email}>` : email;
+  }
+  if (cleaned.includes('@') && !cleaned.includes('<') && !cleaned.includes('>')) {
+    return `TaskFlow Pro <${cleaned}>`;
+  }
+  if (!cleaned.includes('@')) {
+    return `${cleaned} <onboarding@resend.dev>`;
+  }
+  return fallback;
+}
+
 // Initialize Resend HTTPS Client
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'TaskFlow Pro <onboarding@resend.dev>';
+const rawResendKey = process.env.RESEND_API_KEY || '';
+const RESEND_API_KEY = rawResendKey.trim().replace(/^["'`]+|["'`]+$/g, '');
+const FROM_EMAIL = resolveFromEmail(process.env.FROM_EMAIL);
 const resendClient = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 app.use(cors());
