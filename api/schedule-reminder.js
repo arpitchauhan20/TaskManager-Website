@@ -6,7 +6,7 @@ module.exports = function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { taskId, title, deadline, reminderTime, priority, channels, email, whatsappNumber } = req.body || {};
+  const { taskId, title, deadline, reminderTime, priority, channels, email } = req.body || {};
 
   res.status(200).json({
     success: true,
@@ -19,7 +19,6 @@ module.exports = function handler(req, res) {
       priority,
       channels,
       email,
-      whatsappNumber,
       createdAt: new Date().toISOString()
     }
   });

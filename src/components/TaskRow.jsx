@@ -5,7 +5,6 @@ export default function TaskRow({
   onToggleComplete,
   onEdit,
   onDelete,
-  onShareWhatsApp,
   onSyncGoogleCalendar,
   onDownloadICS,
   onSendEmail
@@ -140,7 +139,6 @@ export default function TaskRow({
           {channels.push && <span className="chan-badge push" title="Browser & Mobile Push">🔔 Push</span>}
           {channels.sound && <span className="chan-badge sound" title="5.5s Audio Bell Chime">🔊 Bell</span>}
           {channels.calendar && <span className="chan-badge cal" title="Calendar Sync Enabled">📅 Cal</span>}
-          {channels.whatsapp && <span className="chan-badge wa" title="WhatsApp Quick Note">💬 WA</span>}
           {channels.email && <span className="chan-badge mail" title="Automated Resend Email">📧 Mail</span>}
         </div>
       </div>
@@ -178,7 +176,7 @@ export default function TaskRow({
           type="button"
           className="action-icon-btn"
           onClick={() => setMenuOpen(prev => !prev)}
-          title="More options (WhatsApp, Email, Download)"
+          title="More options (Email, Calendar .ics)"
         >
           •••
         </button>
@@ -196,18 +194,6 @@ export default function TaskRow({
         {/* Floating More Options Dropdown */}
         {menuOpen && (
           <div className="action-menu-dropdown" ref={menuRef} onClick={e => e.stopPropagation()}>
-            <button
-              type="button"
-              className="action-menu-item wa"
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuOpen(false);
-                onShareWhatsApp(task);
-              }}
-            >
-              <span>💬</span>
-              <span>Send WhatsApp Note</span>
-            </button>
 
             <button
               type="button"

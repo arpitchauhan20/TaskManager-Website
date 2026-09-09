@@ -97,7 +97,7 @@ export async function initPushSubscription() {
   }
 }
 
-export async function scheduleBackendReminder(task, { subscription, defaultWhatsApp, defaultEmail } = {}) {
+export async function scheduleBackendReminder(task, { subscription, defaultEmail } = {}) {
   const reminderTime = calculateReminderTimeMs(task);
   if (!reminderTime) {
     // No reminder set or disabled
@@ -115,8 +115,7 @@ export async function scheduleBackendReminder(task, { subscription, defaultWhats
         reminderTime,
         priority: task.priority || 'medium',
         subscription: subscription || null,
-        channels: task.channels || { push: true, sound: true, calendar: true, whatsapp: false, email: false },
-        whatsappNumber: task.whatsappNumber || defaultWhatsApp || null,
+        channels: task.channels || { push: true, sound: true, calendar: true, email: false },
         email: task.reminderEmail || defaultEmail || null
       })
     });

@@ -5,22 +5,19 @@ export default function SettingsModal({
   isOpen,
   onClose,
   userName,
-  whatsappNumber,
   reminderEmail,
   onSaveProfile,
   onShowToast
 }) {
   const [name, setName] = useState(userName || '');
-  const [wa, setWa] = useState(whatsappNumber || '');
   const [email, setEmail] = useState(reminderEmail || '');
   const [isTesting, setIsTesting] = useState(false);
   const [feedCopied, setFeedCopied] = useState(false);
 
   useEffect(() => {
     setName(userName || '');
-    setWa(whatsappNumber || '');
     setEmail(reminderEmail || '');
-  }, [userName, whatsappNumber, reminderEmail, isOpen]);
+  }, [userName, reminderEmail, isOpen]);
 
   if (!isOpen) return null;
 
@@ -28,7 +25,6 @@ export default function SettingsModal({
     e.preventDefault();
     onSaveProfile({
       name: name.trim(),
-      whatsapp: wa.trim(),
       email: email.trim()
     });
     onShowToast('success', '👤', 'Profile and automation settings saved');
@@ -95,21 +91,6 @@ export default function SettingsModal({
               value={name}
               onChange={e => setName(e.target.value)}
               required
-            />
-          </div>
-
-          {/* Default WhatsApp */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="settings-wa-input">
-              Default WhatsApp Number (Optional)
-            </label>
-            <input
-              id="settings-wa-input"
-              className="form-input"
-              type="tel"
-              placeholder="e.g. 7347363524 or +91 9876543210"
-              value={wa}
-              onChange={e => setWa(e.target.value)}
             />
           </div>
 

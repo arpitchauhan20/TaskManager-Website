@@ -46,14 +46,13 @@ export default function App() {
       priority: 'high',
       reminderMode: 'preset',
       reminderPresetMinutes: 15,
-      channels: { push: true, sound: true, calendar: true, whatsapp: true, email: true },
+      channels: { push: true, sound: true, calendar: true, email: true },
       completed: false,
       createdAt: new Date().toISOString()
     }
   ]));
 
   const [userName, setUserName] = useState(() => loadStorage('taskflow_user', 'Arpit'));
-  const [whatsappNumber, setWhatsappNumber] = useState(() => loadStorage('taskflow_whatsapp', '7347363524'));
   const [reminderEmail, setReminderEmail] = useState(() => loadStorage('taskflow_email', 'arpitchauhan5586@gmail.com'));
   const [palette, setPalette] = useState(() => loadStorage('taskflow_palette', 'indigo'));
   const [soundEnabled, setSoundEnabled] = useState(() => loadStorage('taskflow_sound', true));
@@ -279,7 +278,6 @@ export default function App() {
 
   useEffect(() => { saveStorage('taskflow_tasks', tasks); }, [tasks]);
   useEffect(() => { saveStorage('taskflow_user', userName); }, [userName]);
-  useEffect(() => { saveStorage('taskflow_whatsapp', whatsappNumber); }, [whatsappNumber]);
   useEffect(() => { saveStorage('taskflow_email', reminderEmail); }, [reminderEmail]);
   useEffect(() => {
     saveStorage('taskflow_palette', palette);
@@ -407,7 +405,7 @@ export default function App() {
       priority: 'medium',
       reminderMode: 'preset',
       reminderPresetMinutes: 15,
-      channels: { push: true, sound: true, calendar: true, whatsapp: false, email: false },
+      channels: { push: true, sound: true, calendar: true, email: false },
       completed: false,
       createdAt: new Date().toISOString()
     };
@@ -417,7 +415,6 @@ export default function App() {
 
     scheduleBackendReminder(newTask, {
       subscription: pushSub,
-      defaultWhatsApp: whatsappNumber,
       defaultEmail: reminderEmail
     });
   };
@@ -454,7 +451,6 @@ export default function App() {
     // 1. Sync persistent background reminder to server (fires when scheduled time arrives)
     scheduleBackendReminder(savedTask, {
       subscription: pushSub,
-      defaultWhatsApp: whatsappNumber,
       defaultEmail: reminderEmail
     }).then(res => {
       if (res?.success) {
@@ -514,7 +510,6 @@ export default function App() {
             // Re-schedule reminder if uncompleted
             scheduleBackendReminder(t, {
               subscription: pushSub,
-              defaultWhatsApp: whatsappNumber,
               defaultEmail: reminderEmail
             });
           }
@@ -541,17 +536,6 @@ export default function App() {
       showToast('error', '🗑️', `"${target?.title || 'Task'}" deleted`);
       setTaskToDeleteId(null);
     }
-  };
-
-  const handleShareWhatsApp = (task) => {
-    const deadlineText = task.deadline ? new Date(task.deadline).toLocaleString() : 'No deadline';
-    const msg = `*TaskFlow Reminder:* ${task.title}\n*Deadline:* ${deadlineText}\n*Priority:* ${(task.priority || 'medium').toUpperCase()}\n${task.description ? `*Details:* ${task.description}\n` : ''}_Managed via TaskFlow Pro_`;
-    const phone = (task.whatsappNumber || whatsappNumber || '').replace(/[^0-9]/g, '');
-    const url = phone
-      ? `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`
-      : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-    showToast('info', '💬', phone ? `Opening WhatsApp to +${phone}...` : 'Opening WhatsApp...');
   };
 
   const handleSyncGoogleCalendar = (task) => {
@@ -584,9 +568,8 @@ export default function App() {
     }
   };
 
-  const handleSaveProfile = ({ name, whatsapp, email }) => {
+  const handleSaveProfile = ({ name, email }) => {
     if (name) setUserName(name);
-    if (whatsapp) setWhatsappNumber(whatsapp);
     if (email) setReminderEmail(email);
   };
 
@@ -682,7 +665,6 @@ export default function App() {
               }
             }}
             onDelete={handleDeleteTask}
-            onShareWhatsApp={handleShareWhatsApp}
             onSyncGoogleCalendar={handleSyncGoogleCalendar}
             onDownloadICS={handleDownloadICS}
             onSendEmail={handleSendEmail}
@@ -704,7 +686,6 @@ export default function App() {
         }}
         onSave={handleSaveTask}
         taskToEdit={taskToEdit}
-        defaultWhatsApp={whatsappNumber}
         defaultEmail={reminderEmail}
         soundEnabled={soundEnabled}
       />
@@ -713,7 +694,6 @@ export default function App() {
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
         userName={userName}
-        whatsappNumber={whatsappNumber}
         reminderEmail={reminderEmail}
         onSaveProfile={handleSaveProfile}
         onShowToast={showToast}

@@ -27,11 +27,9 @@ export default function TaskModal({
     push: true,
     sound: true,
     calendar: true,
-    whatsapp: true,
     email: true
   });
 
-  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [reminderEmail, setReminderEmail] = useState('');
 
   // Populate form on open or taskToEdit change
@@ -46,8 +44,7 @@ export default function TaskModal({
       setReminderOffsetValue(taskToEdit.reminderOffsetValue || 2);
       setReminderOffsetUnit(taskToEdit.reminderOffsetUnit || 'hours');
       setReminderExact(taskToEdit.reminderExact || '');
-      setChannels(taskToEdit.channels || { push: true, sound: true, calendar: true, whatsapp: true, email: true });
-      setWhatsappNumber(taskToEdit.whatsappNumber || defaultWhatsApp || '');
+      setChannels(taskToEdit.channels || { push: true, sound: true, calendar: true, email: true });
       setReminderEmail(taskToEdit.reminderEmail || defaultEmail || '');
     } else {
       // Default new task
@@ -65,11 +62,10 @@ export default function TaskModal({
       setReminderOffsetValue(2);
       setReminderOffsetUnit('hours');
       setReminderExact('');
-      setChannels({ push: true, sound: true, calendar: true, whatsapp: true, email: true });
-      setWhatsappNumber(defaultWhatsApp || '');
+      setChannels({ push: true, sound: true, calendar: true, email: true });
       setReminderEmail(defaultEmail || '');
     }
-  }, [taskToEdit, isOpen, defaultWhatsApp, defaultEmail]);
+  }, [taskToEdit, isOpen, defaultEmail]);
 
   if (!isOpen) return null;
 
@@ -128,7 +124,6 @@ export default function TaskModal({
       reminderOffsetUnit,
       reminderExact,
       channels,
-      whatsappNumber: channels.whatsapp ? whatsappNumber.trim() : null,
       reminderEmail: channels.email ? reminderEmail.trim() : null
     });
   };
@@ -368,19 +363,6 @@ export default function TaskModal({
                     <span className="channel-check-mark">{channels.calendar ? '✓' : ''}</span>
                   </div>
 
-                  {/* WhatsApp */}
-                  <div
-                    className={`channel-choice ${channels.whatsapp ? 'active' : ''}`}
-                    onClick={() => toggleChannel('whatsapp')}
-                  >
-                    <span className="channel-choice-icon">💬</span>
-                    <div className="channel-choice-info">
-                      <span className="channel-choice-name">WhatsApp Quick Note</span>
-                      <span className="channel-choice-desc">Direct pre-formatted WhatsApp reminder</span>
-                    </div>
-                    <span className="channel-check-mark">{channels.whatsapp ? '✓' : ''}</span>
-                  </div>
-
                   {/* Email */}
                   <div
                     className={`channel-choice ${channels.email ? 'active' : ''}`}
@@ -394,26 +376,6 @@ export default function TaskModal({
                     <span className="channel-check-mark">{channels.email ? '✓' : ''}</span>
                   </div>
                 </div>
-
-                {/* WhatsApp Phone Contact Field */}
-                {channels.whatsapp && (
-                  <div className="channel-input-card" style={{ marginTop: '10px' }}>
-                    <div className="channel-input-header">
-                      <span className="channel-input-badge wa">💬 WhatsApp Number</span>
-                      <span className="channel-input-hint">Target phone where message will be sent (with country code)</span>
-                    </div>
-                    <div className="input-with-icon">
-                      <span className="input-icon">📱</span>
-                      <input
-                        className="form-input"
-                        type="tel"
-                        placeholder="e.g. 7347363524 or +91 9876543210"
-                        value={whatsappNumber}
-                        onChange={e => setWhatsappNumber(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
 
                 {/* Email Contact Field */}
                 {channels.email && (

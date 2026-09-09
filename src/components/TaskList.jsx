@@ -6,7 +6,6 @@ export default function TaskList({
   onToggleComplete,
   onEdit,
   onDelete,
-  onShareWhatsApp,
   onSyncGoogleCalendar,
   onDownloadICS,
   onSendEmail,
@@ -73,7 +72,6 @@ export default function TaskList({
             onToggleComplete={onToggleComplete}
             onEdit={onEdit}
             onDelete={onDelete}
-            onShareWhatsApp={onShareWhatsApp}
             onSyncGoogleCalendar={onSyncGoogleCalendar}
             onDownloadICS={onDownloadICS}
             onSendEmail={onSendEmail}
