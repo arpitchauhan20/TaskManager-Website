@@ -124,7 +124,7 @@ export default function TaskModal({
       reminderOffsetUnit,
       reminderExact,
       channels,
-      reminderEmail: channels.email ? reminderEmail.trim() : null
+      reminderEmail: (channels.email || channels.calendar) ? reminderEmail.trim() : null
     });
   };
 
@@ -377,19 +377,29 @@ export default function TaskModal({
                   </div>
                 </div>
 
-                {/* Email Contact Field */}
-                {channels.email && (
+                {/* Destination Gmail / Email Contact Field */}
+                {(channels.calendar || channels.email) && (
                   <div className="channel-input-card" style={{ marginTop: '10px' }}>
                     <div className="channel-input-header">
-                      <span className="channel-input-badge mail">📧 Reminder Email Address</span>
-                      <span className="channel-input-hint">Destination where Resend delivers the task &amp; calendar invite</span>
+                      <span className="channel-input-badge mail">
+                        {channels.calendar && channels.email
+                          ? '📅 & 📧 Gmail ID for Calendar & Email'
+                          : channels.calendar
+                            ? '📅 Gmail ID for Google Calendar'
+                            : '📧 Reminder Email Address'}
+                      </span>
+                      <span className="channel-input-hint">
+                        {channels.calendar
+                          ? 'Event automatically saves directly on this Gmail ID’s Google Calendar'
+                          : 'Destination where Resend delivers the reminder email'}
+                      </span>
                     </div>
                     <div className="input-with-icon">
                       <span className="input-icon">✉️</span>
                       <input
                         className="form-input"
                         type="email"
-                        placeholder="e.g. arpitchauhan5586@gmail.com"
+                        placeholder="e.g. yourname@gmail.com"
                         value={reminderEmail}
                         onChange={e => setReminderEmail(e.target.value)}
                       />

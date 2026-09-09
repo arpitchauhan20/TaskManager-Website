@@ -134,9 +134,9 @@ export async function fetchPrimaryCalendarInfo(token) {
 
 /**
  * Saves a task event directly to Google Calendar using the Google Calendar REST API.
- * Hands-free: No tab or manual "Save" click needed.
+ * Automatically saves onto the provided Gmail ID's calendar (via primary calendar & attendee sync with sendUpdates=all).
  */
-export async function saveEventToGoogleCalendar(task) {
+export async function saveEventToGoogleCalendar(task, fallbackEmail = '') {
   const token = getGoogleAccessToken();
   if (!token) {
     return { success: false, needAuth: true, error: 'Google Calendar is not connected.' };
@@ -144,6 +144,7 @@ export async function saveEventToGoogleCalendar(task) {
 
   const deadline = task.deadline ? new Date(task.deadline) : new Date(Date.now() + 3600000);
   const deadlineEnd = new Date(deadline.getTime() + 30 * 60 * 1000); // 30 min duration
+  const targetEmail = (task.reminderEmail || fallbackEmail || getConnectedGoogleEmail() || '').trim();
 
   // Calculate reminder offset
   let remMs = task.reminderTime;
@@ -177,6 +178,16 @@ export async function saveEventToGoogleCalendar(task) {
       dateTime: deadlineEnd.toISOString(),
       timeZone
     },
+    // Inviting the user's specified Gmail ID places the event directly onto their Google Calendar
+    ...(targetEmail ? {
+      attendees: [
+        {
+          email: targetEmail,
+          displayName: targetEmail.split('@')[0],
+          responseStatus: 'accepted'
+        }
+      ]
+    } : {}),
     reminders: {
       useDefault: false,
       overrides: [
@@ -187,7 +198,8 @@ export async function saveEventToGoogleCalendar(task) {
   };
 
   try {
-    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+    // sendUpdates=all ensures Google Calendar dispatches the event directly to the target Gmail ID's calendar
+    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -213,7 +225,8 @@ export async function saveEventToGoogleCalendar(task) {
       success: true,
       htmlLink: data.htmlLink,
       id: data.id,
-      summary: data.summary
+      summary: data.summary,
+      targetEmail
     };
   } catch (err) {
     console.error('Error saving directly to Google Calendar:', err);
@@ -227,11 +240,12 @@ export function formatGCalDate(date) {
 }
 
 /**
- * Fallback: Opens prefilled Google Calendar web URL in a new tab.
+ * Fallback: Opens prefilled Google Calendar web URL in a new tab, pre-inviting the specified Gmail ID.
  */
-export function openGoogleCalendar(task) {
+export function openGoogleCalendar(task, fallbackEmail = '') {
   const deadline = task.deadline ? new Date(task.deadline) : new Date(Date.now() + 3600000);
   const end = new Date(deadline.getTime() + 30 * 60 * 1000);
+  const targetEmail = (task.reminderEmail || fallbackEmail || '').trim();
 
   let remMs = task.reminderTime;
   if (!remMs) {
@@ -256,7 +270,10 @@ export function openGoogleCalendar(task) {
     `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${remDate.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via TaskFlow Pro: https://task-manager-website-psi.vercel.app`
   );
 
-  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadline)}/${formatGCalDate(end)}&details=${details}`;
+  let url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadline)}/${formatGCalDate(end)}&details=${details}`;
+  if (targetEmail) {
+    url += `&add=${encodeURIComponent(targetEmail)}`;
+  }
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 

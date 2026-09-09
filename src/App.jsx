@@ -465,20 +465,26 @@ export default function App() {
 
     // 2. Automatically save event in Google Calendar if user checked calendar channel
     if (taskData.channels?.calendar && savedTask.deadline) {
+      const targetGcalEmail = (taskData.reminderEmail || reminderEmail || '').trim();
       if (isGoogleCalendarConnected()) {
-        saveEventToGoogleCalendar(savedTask).then(gcalRes => {
+        saveEventToGoogleCalendar(savedTask, targetGcalEmail).then(gcalRes => {
           if (gcalRes.success) {
-            showToast('success', '📅', 'Auto-saved directly to your Google Calendar!');
+            showToast('success', '📅', targetGcalEmail
+              ? `Auto-saved to Google Calendar for ${targetGcalEmail}!`
+              : 'Auto-saved directly to your Google Calendar!');
           } else if (gcalRes.needAuth) {
-            openGoogleCalendar(savedTask);
+            openGoogleCalendar(savedTask, targetGcalEmail);
             showToast('info', '📅', 'Google session expired. Opening calendar template...');
           } else {
-            openGoogleCalendar(savedTask);
+            openGoogleCalendar(savedTask, targetGcalEmail);
+            showToast('error', '❌', gcalRes.error || 'Failed to auto-save to Google Calendar');
           }
         });
       } else {
-        openGoogleCalendar(savedTask);
-        showToast('info', '📅', 'Opening Google Calendar. Tip: Connect Google Calendar in Settings ⚙️ to auto-save directly!');
+        openGoogleCalendar(savedTask, targetGcalEmail);
+        showToast('info', '📅', targetGcalEmail
+          ? `Opening Google Calendar inviting ${targetGcalEmail}!`
+          : 'Opening Google Calendar. Connect in Settings ⚙️ to auto-save directly!');
       }
     }
 
@@ -557,20 +563,21 @@ export default function App() {
   };
 
   const handleSyncGoogleCalendar = async (task) => {
+    const targetEmail = (task.reminderEmail || reminderEmail || '').trim();
     if (isGoogleCalendarConnected()) {
-      showToast('info', '⏳', 'Auto-saving to Google Calendar...');
-      const res = await saveEventToGoogleCalendar(task);
+      showToast('info', '⏳', targetEmail ? `Auto-saving to Google Calendar for ${targetEmail}...` : 'Auto-saving to Google Calendar...');
+      const res = await saveEventToGoogleCalendar(task, targetEmail);
       if (res.success) {
-        showToast('success', '📅', 'Directly saved to your Google Calendar!');
+        showToast('success', '📅', targetEmail ? `Directly saved to Google Calendar for ${targetEmail}!` : 'Directly saved to your Google Calendar!');
       } else if (res.needAuth) {
-        openGoogleCalendar(task);
+        openGoogleCalendar(task, targetEmail);
         showToast('info', '📅', 'Google session needed. Opening template...');
       } else {
         showToast('error', '❌', res.error || 'Failed to save to Google Calendar');
       }
     } else {
-      openGoogleCalendar(task);
-      showToast('info', '📅', 'Opening Google Calendar. Connect in Settings ⚙️ to auto-save directly!');
+      openGoogleCalendar(task, targetEmail);
+      showToast('info', '📅', targetEmail ? `Opening Google Calendar inviting ${targetEmail}!` : 'Opening Google Calendar. Connect in Settings ⚙️ to auto-save directly!');
     }
   };
 

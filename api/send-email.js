@@ -1,7 +1,7 @@
 const { Resend } = require('resend');
 
 // Helper: RFC 5545 iCalendar Invitation setting the DEADLINE date and time with reminder VALARM
-function generateICSInvite(task) {
+function generateICSInvite(task, recipientEmail) {
   const formatICSDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
   const now = new Date();
 
@@ -32,13 +32,14 @@ function generateICSInvite(task) {
 
   // Calculate alarm trigger offset in minutes before deadline
   const offsetMinutes = Math.max(0, Math.round((deadlineStart.getTime() - reminderStartMs) / 60000));
+  const attendeeEmail = recipientEmail || 'arpitchauhan5586@gmail.com';
 
   return [
     'BEGIN:VCALENDAR',
     'PRODID:-//TaskFlow Pro//Deadline Calendar Engine//EN',
     'VERSION:2.0',
     'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
+    'METHOD:REQUEST',
 
     // --- SCHEDULED DEADLINE EVENT WITH EMBEDDED REMINDER ALARM ---
     'BEGIN:VEVENT',
@@ -48,6 +49,8 @@ function generateICSInvite(task) {
     `DTEND:${formatICSDate(deadlineEnd)}`,
     `SUMMARY:🎯 Deadline: ${cleanTitle}`,
     `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}\\n\\nManaged via TaskFlow Pro`,
+    'ORGANIZER;CN="TaskFlow Pro":mailto:onboarding@resend.dev',
+    `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE;CN="${attendeeEmail}":mailto:${attendeeEmail}`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
     'BEGIN:VALARM',
@@ -153,7 +156,7 @@ module.exports = async function handler(req, res) {
   const deadlineEnd = new Date(deadlineStart.getTime() + 30 * 60 * 1000);
   const gcalUrl = getGoogleCalendarUrl(taskObj, deadlineStart, deadlineEnd);
 
-  const icsContent = generateICSInvite(taskObj);
+  const icsContent = generateICSInvite(taskObj, targetRecipient);
   const icsBase64 = Buffer.from(icsContent).toString('base64');
   const deadlineStr = taskObj.deadline ? deadlineStart.toLocaleString() : 'Not specified';
   const priorityStr = (taskObj.priority || 'medium').toUpperCase();
@@ -218,7 +221,8 @@ module.exports = async function handler(req, res) {
       attachments: [
         {
           filename: 'invite.ics',
-          content: icsBase64
+          content: icsBase64,
+          content_type: 'text/calendar; method=REQUEST; charset=UTF-8'
         }
       ]
     });
