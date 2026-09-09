@@ -58,8 +58,8 @@ export default function App() {
     }
   ]));
 
-  const [userName, setUserName] = useState(() => loadStorage('taskflow_user', 'Arpit'));
-  const [reminderEmail, setReminderEmail] = useState(() => loadStorage('taskflow_email', 'arpitchauhan5586@gmail.com'));
+  const [userName, setUserName] = useState(() => loadStorage('taskflow_user', 'My Workspace'));
+  const [reminderEmail, setReminderEmail] = useState(() => loadStorage('taskflow_email', ''));
   const [palette, setPalette] = useState(() => loadStorage('taskflow_palette', 'indigo'));
   const [soundEnabled, setSoundEnabled] = useState(() => loadStorage('taskflow_sound', true));
 
@@ -608,7 +608,11 @@ export default function App() {
   };
 
   const handleSendEmail = async (task) => {
-    const target = task.reminderEmail || reminderEmail || 'arpitchauhan5586@gmail.com';
+    const target = (task.reminderEmail || reminderEmail || '').trim();
+    if (!target) {
+      showToast('error', '⚠️', 'Please enter a recipient Gmail/email address in task or Settings.');
+      return;
+    }
     showToast('info', '⏳', `Sending automated email & calendar invite via Resend to ${target}...`);
 
     const res = await sendTaskEmail({

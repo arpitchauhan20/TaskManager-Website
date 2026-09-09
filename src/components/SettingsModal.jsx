@@ -47,11 +47,17 @@ export default function SettingsModal({
   };
 
   const handleTestEmail = async () => {
+    const target = email.trim();
+    if (!target) {
+      onShowToast('error', '⚠️', 'Please enter your email address in the field above before testing.');
+      return;
+    }
+
     setIsTesting(true);
-    onShowToast('info', '⏳', 'Sending live test email and calendar invite via Resend...');
+    onShowToast('info', '⏳', `Sending live test email and calendar invite via Resend to ${target}...`);
 
     const res = await sendTaskEmail({
-      recipient: email.trim() || 'arpitchauhan5586@gmail.com',
+      recipient: target,
       title: 'TaskFlow Pro — Live Integration Test',
       description: 'This automated test confirms that TaskFlow Pro can deliver emails directly via Resend HTTPS (Port 443) and automatically add events to Google Calendar.',
       deadline: new Date(Date.now() + 2 * 3600000).toISOString(),
@@ -61,7 +67,7 @@ export default function SettingsModal({
 
     setIsTesting(false);
     if (res.success) {
-      onShowToast('success', '🎉', `Test email sent to ${email || 'arpitchauhan5586@gmail.com'}! Check your inbox.`);
+      onShowToast('success', '🎉', `Test email sent to ${target}! Check your inbox.`);
     } else {
       onShowToast('error', '❌', res.error || 'Failed to dispatch test email');
     }
@@ -162,7 +168,7 @@ export default function SettingsModal({
               id="settings-email-input"
               className="form-input"
               type="email"
-              placeholder="e.g. arpitchauhan5586@gmail.com"
+              placeholder="e.g. client@gmail.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
             />

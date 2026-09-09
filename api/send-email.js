@@ -32,7 +32,7 @@ function generateICSInvite(task, recipientEmail) {
 
   // Calculate alarm trigger offset in minutes before deadline
   const offsetMinutes = Math.max(0, Math.round((deadlineStart.getTime() - reminderStartMs) / 60000));
-  const attendeeEmail = recipientEmail || 'arpitchauhan5586@gmail.com';
+  const attendeeEmail = recipientEmail || '';
 
   return [
     'BEGIN:VCALENDAR',
@@ -132,7 +132,11 @@ module.exports = async function handler(req, res) {
   }
 
   const { recipient, title, description, deadline, priority, reminderTime, isTest } = req.body || {};
-  const targetRecipient = recipient || 'arpitchauhan5586@gmail.com';
+  const targetRecipient = (recipient || '').trim();
+
+  if (!targetRecipient) {
+    return res.status(400).json({ error: 'Recipient email address is required to dispatch reminders.' });
+  }
 
   const rawApiKey = process.env.RESEND_API_KEY || '';
   const apiKey = rawApiKey.trim().replace(/^["'`]+|["'`]+$/g, '');

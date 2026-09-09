@@ -215,13 +215,14 @@ function generateICSInvite(task) {
 
   // Calculate alarm trigger offset in minutes before deadline
   const offsetMinutes = Math.max(0, Math.round((deadlineStart.getTime() - reminderStartMs) / 60000));
+  const attendeeEmail = (task.reminderEmail || recipient || '').trim();
 
   return [
     'BEGIN:VCALENDAR',
     'PRODID:-//TaskFlow Pro//Deadline Calendar Engine//EN',
     'VERSION:2.0',
     'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
+    'METHOD:REQUEST',
 
     // --- SCHEDULED DEADLINE EVENT WITH EMBEDDED REMINDER ALARM ---
     'BEGIN:VEVENT',
@@ -231,6 +232,8 @@ function generateICSInvite(task) {
     `DTEND:${formatICSDate(deadlineEnd)}`,
     `SUMMARY:🎯 Deadline: ${cleanTitle}`,
     `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}\\n\\nManaged via TaskFlow Pro`,
+    'ORGANIZER;CN="TaskFlow Pro":mailto:onboarding@resend.dev',
+    ...(attendeeEmail ? [`ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE;CN="${attendeeEmail}":mailto:${attendeeEmail}`] : []),
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
     'BEGIN:VALARM',
@@ -245,26 +248,33 @@ function generateICSInvite(task) {
 }
 
 // Helper to generate direct 1-click Google Calendar URL for the deadline date and time
-function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd) {
+function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd, targetEmail = '') {
   const formatGCalDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
   const title = encodeURIComponent(`🎯 Deadline: ${task.title || 'Task Reminder'}`);
   const details = encodeURIComponent(
     `Task: ${task.title || ''}\nDeadline: ${deadlineStart.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via TaskFlow Pro: https://task-manager-website-psi.vercel.app`
   );
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
+  let url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
+  if (targetEmail) {
+    url += `&add=${encodeURIComponent(targetEmail)}`;
+  }
+  return url;
 }
 
 // Automated Email Dispatcher (Sends real email with Google Calendar sync invite)
 async function sendAutomatedEmail(recipient, task, isTest = false) {
-  const targetRecipient = recipient || emailConfig.user || 'arpitchauhan5586@gmail.com';
-  const icsContent = generateICSInvite(task);
+  const targetRecipient = (recipient || task?.reminderEmail || emailConfig.user || '').trim();
+  if (!targetRecipient) {
+    return { success: false, error: 'Recipient email address is required.' };
+  }
+  const icsContent = generateICSInvite(task, targetRecipient);
   const icsBase64 = Buffer.from(icsContent).toString('base64');
   const now = new Date();
   const deadlineStart = task.deadline ? new Date(task.deadline) : new Date(now.getTime() + 3600000);
   const deadlineEnd = new Date(deadlineStart.getTime() + 30 * 60 * 1000);
   const deadlineStr = task.deadline ? deadlineStart.toLocaleString() : 'Not specified';
   const priorityStr = (task.priority || 'medium').toUpperCase();
-  const gcalUrl = getGoogleCalendarUrl(task, deadlineStart, deadlineEnd);
+  const gcalUrl = getGoogleCalendarUrl(task, deadlineStart, deadlineEnd, targetRecipient);
 
   let remMs = task.reminderTime;
   if (!remMs) {
