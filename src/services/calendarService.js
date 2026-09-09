@@ -8,51 +8,42 @@ export function formatGCalDate(date) {
 }
 
 export function openGoogleCalendar(task) {
-  const start = new Date(task.deadline);
-  const end = new Date(start.getTime() + 30 * 60 * 1000); // 30 min duration
-  const deadlineTitle = encodeURIComponent(`🎯 Deadline: ${task.title}`);
-  const details = encodeURIComponent(
-    `${task.description ? task.description + '\n\n' : ''}Priority: ${(task.priority || 'medium').toUpperCase()}\nManaged via TaskFlow Pro`
-  );
+  const deadline = task.deadline ? new Date(task.deadline) : new Date(Date.now() + 3600000);
 
-  // 1. Google Calendar event for DEADLINE
-  const urlDeadline = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${deadlineTitle}&dates=${formatGCalDate(start)}/${formatGCalDate(end)}&details=${details}`;
-  window.open(urlDeadline, '_blank', 'noopener,noreferrer');
-
-  // 2. Google Calendar event for REMINDER ALERT
+  // Calculate reminder date and time
   let remMs = task.reminderTime;
   if (!remMs) {
     if (task.reminderMode === 'preset') {
       const m = parseInt(task.reminderPresetMinutes, 10) || 15;
-      remMs = start.getTime() - m * 60000;
+      remMs = deadline.getTime() - m * 60000;
     } else if (task.reminderMode === 'exact' && task.reminderExact) {
       remMs = new Date(task.reminderExact).getTime();
+    } else if (task.reminderMode === 'offset') {
+      const val = parseFloat(task.reminderOffsetValue) || 1;
+      const unit = task.reminderOffsetUnit || 'hours';
+      const multipliers = { minutes: 60000, hours: 3600000, days: 86400000 };
+      remMs = deadline.getTime() - val * (multipliers[unit] || 3600000);
     } else {
-      remMs = start.getTime() - 15 * 60000; // 15 min before
+      remMs = deadline.getTime() - 15 * 60000;
     }
   }
 
-  if (remMs && Math.abs(remMs - start.getTime()) > 60000) {
-    const remStart = new Date(remMs);
-    const remEnd = new Date(remStart.getTime() + 15 * 60 * 1000);
-    const remTitle = encodeURIComponent(`⏰ Reminder Alert: ${task.title}`);
-    const remDetails = encodeURIComponent(
-      `Upcoming Task Reminder: ${task.title}\nDeadline is at: ${start.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}`
-    );
-    const urlReminder = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${remTitle}&dates=${formatGCalDate(remStart)}/${formatGCalDate(remEnd)}&details=${remDetails}`;
+  const start = new Date(remMs);
+  const end = new Date(start.getTime() + 30 * 60 * 1000); // 30 min duration
+  const title = encodeURIComponent(`⏰ Reminder: ${task.title}`);
+  const details = encodeURIComponent(
+    `TaskFlow Reminder for "${task.title}".\nDeadline is at: ${deadline.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via TaskFlow Pro`
+  );
 
-    setTimeout(() => {
-      window.open(urlReminder, '_blank', 'noopener,noreferrer');
-    }, 450);
-  }
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(start)}/${formatGCalDate(end)}&details=${details}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 export function downloadICS(task) {
   const now = new Date();
   const formatICS = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
 
-  const start = new Date(task.deadline);
-  const end = new Date(start.getTime() + 30 * 60 * 1000);
+  const deadline = task.deadline ? new Date(task.deadline) : new Date(Date.now() + 3600000);
   const taskId = task.id || Date.now();
   const cleanTitle = (task.title || 'task').replace(/[\r\n]/g, ' ');
   const priorityStr = (task.priority || 'medium').toUpperCase();
@@ -62,31 +53,37 @@ export function downloadICS(task) {
   if (!remMs) {
     if (task.reminderMode === 'preset') {
       const m = parseInt(task.reminderPresetMinutes, 10) || 15;
-      remMs = start.getTime() - m * 60000;
+      remMs = deadline.getTime() - m * 60000;
     } else if (task.reminderMode === 'exact' && task.reminderExact) {
       remMs = new Date(task.reminderExact).getTime();
+    } else if (task.reminderMode === 'offset') {
+      const val = parseFloat(task.reminderOffsetValue) || 1;
+      const unit = task.reminderOffsetUnit || 'hours';
+      const multipliers = { minutes: 60000, hours: 3600000, days: 86400000 };
+      remMs = deadline.getTime() - val * (multipliers[unit] || 3600000);
     } else {
-      remMs = start.getTime() - 15 * 60000;
+      remMs = deadline.getTime() - 15 * 60000;
     }
   }
+
   const remStart = new Date(remMs);
-  const remEnd = new Date(remStart.getTime() + 15 * 60 * 1000);
+  const remEnd = new Date(remStart.getTime() + 30 * 60 * 1000);
 
   const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//TaskFlow Pro//Dual-Event Calendar Engine//EN',
+    'PRODID:-//TaskFlow Pro//Reminder Calendar Engine//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
 
-    // --- EVENT 1: Scheduled Reminder Alert ---
+    // --- SCHEDULED REMINDER EVENT ONLY ---
     'BEGIN:VEVENT',
-    `UID:taskflow_${taskId}_reminder@taskflow.pro`,
+    `UID:taskflow_${taskId}@taskflow.pro`,
     `DTSTAMP:${formatICS(now)}`,
     `DTSTART:${formatICS(remStart)}`,
     `DTEND:${formatICS(remEnd)}`,
-    `SUMMARY:⏰ Reminder Alert: ${cleanTitle}`,
-    `DESCRIPTION:Reminder for upcoming task "${cleanTitle}"\\nTarget Deadline: ${start.toLocaleString()}\\nPriority: ${priorityStr}`,
+    `SUMMARY:⏰ Reminder: ${cleanTitle}`,
+    `DESCRIPTION:TaskFlow Reminder for "${cleanTitle}"\\nDeadline: ${deadline.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${desc}`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
     'BEGIN:VALARM',
@@ -96,30 +93,13 @@ export function downloadICS(task) {
     'END:VALARM',
     'END:VEVENT',
 
-    // --- EVENT 2: Actual Task Deadline Milestone ---
-    'BEGIN:VEVENT',
-    `UID:taskflow_${taskId}_deadline@taskflow.pro`,
-    `DTSTAMP:${formatICS(now)}`,
-    `DTSTART:${formatICS(start)}`,
-    `DTEND:${formatICS(end)}`,
-    `SUMMARY:🎯 Deadline: ${cleanTitle}`,
-    `DESCRIPTION:Final Deadline for "${cleanTitle}"\\nPriority: ${priorityStr}\\n\\n${desc}`,
-    'STATUS:CONFIRMED',
-    'SEQUENCE:0',
-    'BEGIN:VALARM',
-    'TRIGGER:-PT10M',
-    'ACTION:DISPLAY',
-    `DESCRIPTION:Deadline in 10 minutes: ${cleanTitle}`,
-    'END:VALARM',
-    'END:VEVENT',
-
     'END:VCALENDAR'
   ].join('\r\n');
 
   const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `${cleanTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_events.ics`;
+  link.download = `${cleanTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_reminder.ics`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

@@ -1,18 +1,17 @@
 const { Resend } = require('resend');
 
-// Helper: RFC 5545 iCalendar Invitation generator with DUAL events (Reminder + Deadline)
+// Helper: RFC 5545 iCalendar Invitation generator setting ONLY the reminder date and time
 function generateICSInvite(task) {
   const formatICSDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
   const now = new Date();
 
   const deadlineStart = task.deadline ? new Date(task.deadline) : new Date(now.getTime() + 3600000);
-  const deadlineEnd = new Date(deadlineStart.getTime() + 30 * 60 * 1000); // 30 min duration
   const taskId = task.taskId || task.id || Date.now();
   const cleanTitle = (task.title || 'Task Reminder').replace(/[\r\n]/g, ' ');
   const cleanDesc = (task.description || '').replace(/\r?\n/g, '\\n');
   const priorityStr = (task.priority || 'medium').toUpperCase();
 
-  // Calculate reminder event timing
+  // Calculate reminder event timing (only reminder date & time is scheduled in calendar)
   let reminderStartMs = task.reminderTime;
   if (!reminderStartMs) {
     if (task.reminderMode === 'preset') {
@@ -20,51 +19,39 @@ function generateICSInvite(task) {
       reminderStartMs = deadlineStart.getTime() - m * 60000;
     } else if (task.reminderMode === 'exact' && task.reminderExact) {
       reminderStartMs = new Date(task.reminderExact).getTime();
+    } else if (task.reminderMode === 'offset') {
+      const val = parseFloat(task.reminderOffsetValue) || 1;
+      const unit = task.reminderOffsetUnit || 'hours';
+      const multipliers = { minutes: 60000, hours: 3600000, days: 86400000 };
+      reminderStartMs = deadlineStart.getTime() - val * (multipliers[unit] || 3600000);
     } else {
       reminderStartMs = deadlineStart.getTime() - 15 * 60000; // Default 15 min before
     }
   }
   const reminderStart = new Date(reminderStartMs);
-  const reminderEnd = new Date(reminderStart.getTime() + 15 * 60 * 1000);
+  const reminderEnd = new Date(reminderStart.getTime() + 30 * 60 * 1000); // 30 min duration
 
   return [
     'BEGIN:VCALENDAR',
-    'PRODID:-//TaskFlow Pro//Dual-Event Calendar Engine//EN',
+    'PRODID:-//TaskFlow Pro//Reminder Calendar Engine//EN',
     'VERSION:2.0',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
 
-    // --- EVENT 1: Scheduled Reminder Alert ---
+    // --- SCHEDULED REMINDER EVENT ONLY ---
     'BEGIN:VEVENT',
-    `UID:taskflow_${taskId}_reminder@taskflow.pro`,
+    `UID:taskflow_${taskId}@taskflow.pro`,
     `DTSTAMP:${formatICSDate(now)}`,
     `DTSTART:${formatICSDate(reminderStart)}`,
     `DTEND:${formatICSDate(reminderEnd)}`,
-    `SUMMARY:⏰ Reminder Alert: ${cleanTitle}`,
-    `DESCRIPTION:Scheduled Reminder for "${cleanTitle}"\\nTarget Deadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}`,
+    `SUMMARY:⏰ Reminder: ${cleanTitle}`,
+    `DESCRIPTION:TaskFlow Reminder for "${cleanTitle}"\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
     'BEGIN:VALARM',
     'TRIGGER:-PT0M',
     'ACTION:DISPLAY',
     `DESCRIPTION:Reminder: ${cleanTitle}`,
-    'END:VALARM',
-    'END:VEVENT',
-
-    // --- EVENT 2: Actual Task Deadline Milestone ---
-    'BEGIN:VEVENT',
-    `UID:taskflow_${taskId}_deadline@taskflow.pro`,
-    `DTSTAMP:${formatICSDate(now)}`,
-    `DTSTART:${formatICSDate(deadlineStart)}`,
-    `DTEND:${formatICSDate(deadlineEnd)}`,
-    `SUMMARY:🎯 Deadline: ${cleanTitle}`,
-    `DESCRIPTION:Final Deadline for "${cleanTitle}"\\nPriority: ${priorityStr}\\n\\n${cleanDesc}`,
-    'STATUS:CONFIRMED',
-    'SEQUENCE:0',
-    'BEGIN:VALARM',
-    'TRIGGER:-PT10M',
-    'ACTION:DISPLAY',
-    `DESCRIPTION:Deadline in 10 minutes: ${cleanTitle}`,
     'END:VALARM',
     'END:VEVENT',
 
