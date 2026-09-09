@@ -14,6 +14,7 @@ import {
   openGoogleCalendar,
   downloadICS,
   isGoogleCalendarConnected,
+  requestGoogleCalendarAccess,
   saveEventToGoogleCalendar
 } from './services/calendarService';
 import { sendTaskEmail } from './services/emailService';
@@ -466,26 +467,36 @@ export default function App() {
     // 2. Automatically save event in Google Calendar if user checked calendar channel
     if (taskData.channels?.calendar && savedTask.deadline) {
       const targetGcalEmail = (taskData.reminderEmail || reminderEmail || '').trim();
-      if (isGoogleCalendarConnected()) {
-        saveEventToGoogleCalendar(savedTask, targetGcalEmail).then(gcalRes => {
+      const doAutoSave = async () => {
+        try {
+          if (!isGoogleCalendarConnected()) {
+            showToast('info', '🔗', 'Connecting Google Calendar to auto-save...');
+            await requestGoogleCalendarAccess();
+          }
+
+          const gcalRes = await saveEventToGoogleCalendar(savedTask, targetGcalEmail);
           if (gcalRes.success) {
-            showToast('success', '📅', targetGcalEmail
-              ? `Auto-saved to Google Calendar for ${targetGcalEmail}!`
+            showToast('success', '🎉', targetGcalEmail
+              ? `Auto-saved directly to Google Calendar for ${targetGcalEmail}!`
               : 'Auto-saved directly to your Google Calendar!');
           } else if (gcalRes.needAuth) {
-            openGoogleCalendar(savedTask, targetGcalEmail);
-            showToast('info', '📅', 'Google session expired. Opening calendar template...');
+            await requestGoogleCalendarAccess({ promptConsent: true });
+            const retryRes = await saveEventToGoogleCalendar(savedTask, targetGcalEmail);
+            if (retryRes.success) {
+              showToast('success', '🎉', 'Auto-saved directly to your Google Calendar!');
+            } else {
+              showToast('error', '❌', retryRes.error || 'Failed to auto-save to Google Calendar');
+            }
           } else {
-            openGoogleCalendar(savedTask, targetGcalEmail);
             showToast('error', '❌', gcalRes.error || 'Failed to auto-save to Google Calendar');
           }
-        });
-      } else {
-        openGoogleCalendar(savedTask, targetGcalEmail);
-        showToast('info', '📅', targetGcalEmail
-          ? `Opening Google Calendar inviting ${targetGcalEmail}!`
-          : 'Opening Google Calendar. Connect in Settings ⚙️ to auto-save directly!');
-      }
+        } catch (err) {
+          console.warn('Google Calendar auto-save error:', err);
+          showToast('error', '⚠️', err.message || 'Google authorization failed.');
+        }
+      };
+
+      doAutoSave();
     }
 
     // 3. Email Reminder Handling:
@@ -564,20 +575,30 @@ export default function App() {
 
   const handleSyncGoogleCalendar = async (task) => {
     const targetEmail = (task.reminderEmail || reminderEmail || '').trim();
-    if (isGoogleCalendarConnected()) {
+    try {
+      if (!isGoogleCalendarConnected()) {
+        showToast('info', '🔗', 'Connecting Google Calendar to auto-save...');
+        await requestGoogleCalendarAccess();
+      }
+
       showToast('info', '⏳', targetEmail ? `Auto-saving to Google Calendar for ${targetEmail}...` : 'Auto-saving to Google Calendar...');
       const res = await saveEventToGoogleCalendar(task, targetEmail);
       if (res.success) {
-        showToast('success', '📅', targetEmail ? `Directly saved to Google Calendar for ${targetEmail}!` : 'Directly saved to your Google Calendar!');
+        showToast('success', '🎉', targetEmail ? `Directly saved to Google Calendar for ${targetEmail}!` : 'Directly saved to your Google Calendar!');
       } else if (res.needAuth) {
-        openGoogleCalendar(task, targetEmail);
-        showToast('info', '📅', 'Google session needed. Opening template...');
+        await requestGoogleCalendarAccess({ promptConsent: true });
+        const retryRes = await saveEventToGoogleCalendar(task, targetEmail);
+        if (retryRes.success) {
+          showToast('success', '🎉', 'Directly saved to your Google Calendar!');
+        } else {
+          showToast('error', '❌', retryRes.error || 'Failed to save to Google Calendar');
+        }
       } else {
         showToast('error', '❌', res.error || 'Failed to save to Google Calendar');
       }
-    } else {
-      openGoogleCalendar(task, targetEmail);
-      showToast('info', '📅', targetEmail ? `Opening Google Calendar inviting ${targetEmail}!` : 'Opening Google Calendar. Connect in Settings ⚙️ to auto-save directly!');
+    } catch (err) {
+      console.warn('Google Calendar sync error:', err);
+      showToast('error', '❌', err.message || 'Google authorization was cancelled or failed.');
     }
   };
 

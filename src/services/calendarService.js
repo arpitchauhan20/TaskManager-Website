@@ -71,7 +71,11 @@ export function requestGoogleCalendarAccess({ promptConsent = false } = {}) {
           callback: async (resp) => {
             if (resp.error) {
               console.error('Google OAuth Error:', resp);
-              reject(new Error(resp.error_description || resp.error || 'Google authorization failed'));
+              let msg = resp.error_description || resp.error || 'Google authorization failed';
+              if (resp.error === 'origin_mismatch') {
+                msg = `Origin mismatch! Add ${window.location.origin} to Authorized JavaScript origins in Google Cloud Console.`;
+              }
+              reject(new Error(msg));
               return;
             }
             const expiresInMs = (parseInt(resp.expires_in, 10) || 3599) * 1000;
@@ -84,6 +88,16 @@ export function requestGoogleCalendarAccess({ promptConsent = false } = {}) {
             await fetchPrimaryCalendarInfo(resp.access_token);
 
             resolve(resp.access_token);
+          },
+          error_callback: (err) => {
+            console.error('GIS Error Callback:', err);
+            let msg = err.message || 'Google authorization popup closed.';
+            if (err.type === 'popup_closed') {
+              msg = 'Google authorization popup was closed before completing.';
+            } else if (err.type === 'popup_failed_to_open') {
+              msg = 'Popup blocked! Please allow popups in your browser address bar.';
+            }
+            reject(new Error(msg));
           }
         });
 
