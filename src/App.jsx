@@ -10,7 +10,12 @@ import SettingsModal from './components/SettingsModal';
 import ConfirmModal from './components/ConfirmModal';
 import ToastContainer from './components/ToastContainer';
 import { SoundFX } from './services/soundEngine';
-import { openGoogleCalendar, downloadICS } from './services/calendarService';
+import {
+  openGoogleCalendar,
+  downloadICS,
+  isGoogleCalendarConnected,
+  saveEventToGoogleCalendar
+} from './services/calendarService';
 import { sendTaskEmail } from './services/emailService';
 import {
   initPushSubscription,
@@ -460,8 +465,21 @@ export default function App() {
 
     // 2. Automatically save event in Google Calendar if user checked calendar channel
     if (taskData.channels?.calendar && savedTask.deadline) {
-      openGoogleCalendar(savedTask);
-      showToast('success', '📅', 'Opening Google Calendar with pre-filled event...');
+      if (isGoogleCalendarConnected()) {
+        saveEventToGoogleCalendar(savedTask).then(gcalRes => {
+          if (gcalRes.success) {
+            showToast('success', '📅', 'Auto-saved directly to your Google Calendar!');
+          } else if (gcalRes.needAuth) {
+            openGoogleCalendar(savedTask);
+            showToast('info', '📅', 'Google session expired. Opening calendar template...');
+          } else {
+            openGoogleCalendar(savedTask);
+          }
+        });
+      } else {
+        openGoogleCalendar(savedTask);
+        showToast('info', '📅', 'Opening Google Calendar. Tip: Connect Google Calendar in Settings ⚙️ to auto-save directly!');
+      }
     }
 
     // 3. Email Reminder Handling:
@@ -538,9 +556,22 @@ export default function App() {
     }
   };
 
-  const handleSyncGoogleCalendar = (task) => {
-    openGoogleCalendar(task);
-    showToast('success', '📅', 'Opening Google Calendar with pre-filled event & reminder...');
+  const handleSyncGoogleCalendar = async (task) => {
+    if (isGoogleCalendarConnected()) {
+      showToast('info', '⏳', 'Auto-saving to Google Calendar...');
+      const res = await saveEventToGoogleCalendar(task);
+      if (res.success) {
+        showToast('success', '📅', 'Directly saved to your Google Calendar!');
+      } else if (res.needAuth) {
+        openGoogleCalendar(task);
+        showToast('info', '📅', 'Google session needed. Opening template...');
+      } else {
+        showToast('error', '❌', res.error || 'Failed to save to Google Calendar');
+      }
+    } else {
+      openGoogleCalendar(task);
+      showToast('info', '📅', 'Opening Google Calendar. Connect in Settings ⚙️ to auto-save directly!');
+    }
   };
 
   const handleDownloadICS = (task) => {

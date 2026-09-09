@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { sendTaskEmail } from '../services/emailService';
+import {
+  isGoogleCalendarConnected,
+  getConnectedGoogleEmail,
+  requestGoogleCalendarAccess,
+  disconnectGoogleCalendar,
+  saveEventToGoogleCalendar
+} from '../services/calendarService';
 
 export default function SettingsModal({
   isOpen,
@@ -14,9 +21,17 @@ export default function SettingsModal({
   const [isTesting, setIsTesting] = useState(false);
   const [feedCopied, setFeedCopied] = useState(false);
 
+  // Google Calendar OAuth state
+  const [gcalConnected, setGcalConnected] = useState(() => isGoogleCalendarConnected());
+  const [gcalEmail, setGcalEmail] = useState(() => getConnectedGoogleEmail());
+  const [isConnectingGCal, setIsConnectingGCal] = useState(false);
+  const [isTestingGCal, setIsTestingGCal] = useState(false);
+
   useEffect(() => {
     setName(userName || '');
     setEmail(reminderEmail || '');
+    setGcalConnected(isGoogleCalendarConnected());
+    setGcalEmail(getConnectedGoogleEmail());
   }, [userName, reminderEmail, isOpen]);
 
   if (!isOpen) return null;
@@ -49,6 +64,50 @@ export default function SettingsModal({
       onShowToast('success', '🎉', `Test email sent to ${email || 'arpitchauhan5586@gmail.com'}! Check your inbox.`);
     } else {
       onShowToast('error', '❌', res.error || 'Failed to dispatch test email');
+    }
+  };
+
+  const handleConnectGoogle = async () => {
+    setIsConnectingGCal(true);
+    try {
+      await requestGoogleCalendarAccess({ promptConsent: true });
+      setGcalConnected(true);
+      setGcalEmail(getConnectedGoogleEmail());
+      onShowToast('success', '📅', 'Google Calendar connected! Tasks will now auto-save directly in the background.');
+    } catch (err) {
+      onShowToast('error', '❌', err.message || 'Failed to authorize Google Calendar');
+    } finally {
+      setIsConnectingGCal(false);
+    }
+  };
+
+  const handleDisconnectGoogle = () => {
+    disconnectGoogleCalendar();
+    setGcalConnected(false);
+    setGcalEmail(null);
+    onShowToast('info', 'ℹ️', 'Google Calendar disconnected.');
+  };
+
+  const handleTestGoogleCalendar = async () => {
+    setIsTestingGCal(true);
+    try {
+      const res = await saveEventToGoogleCalendar({
+        title: 'TaskFlow Pro Live Test Event',
+        description: 'Auto-saved directly via Google Calendar REST API without opening new tabs!',
+        deadline: new Date(Date.now() + 3600000).toISOString(),
+        priority: 'high',
+        reminderMode: 'preset',
+        reminderPresetMinutes: 15
+      });
+      if (res.success) {
+        onShowToast('success', '🎉', 'Event auto-saved directly to Google Calendar! Check calendar.google.com');
+      } else {
+        onShowToast('error', '❌', res.error || 'Failed to auto-save test event');
+      }
+    } catch (err) {
+      onShowToast('error', '❌', err.message || 'Calendar auto-save failed');
+    } finally {
+      setIsTestingGCal(false);
     }
   };
 
@@ -138,19 +197,73 @@ export default function SettingsModal({
             </div>
           </div>
 
-          {/* Hands-Free Google Calendar Sync Card */}
+          {/* Direct Google Calendar OAuth Sync Card */}
           <div className="settings-card-section" style={{ marginTop: '12px' }}>
             <div className="settings-card-header">
               <span className="settings-card-icon">📅</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <strong>Direct Google Calendar Auto-Save</strong>
+                <div className="settings-card-desc">
+                  {gcalConnected
+                    ? `Connected: ${gcalEmail || 'Active Session'} — Events save silently in the background`
+                    : 'Auto-saves tasks directly to Google Calendar without opening new tabs'}
+                </div>
+              </div>
+              <span className={`badge-status-pill ${gcalConnected ? 'active' : ''}`}>
+                {gcalConnected ? '✓ Connected' : 'Not Linked'}
+              </span>
+            </div>
+
+            <div className="btn-group-row" style={{ marginTop: '12px', justifyContent: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
+              {!gcalConnected ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={handleConnectGoogle}
+                  disabled={isConnectingGCal}
+                >
+                  <span>{isConnectingGCal ? '⏳ Authorizing...' : '🔗 Connect Google Calendar'}</span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={handleTestGoogleCalendar}
+                    disabled={isTestingGCal}
+                  >
+                    <span>{isTestingGCal ? '⏳ Saving...' : '⚡ Test Direct Auto-Save'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleDisconnectGoogle}
+                    style={{ color: '#f43f5e' }}
+                  >
+                    Disconnect
+                  </button>
+                </>
+              )}
+            </div>
+
+            <p className="form-hint" style={{ marginTop: '10px', fontSize: '11px', lineHeight: '1.45' }}>
+              💡 <strong>Authorized Origins in Google Cloud Console:</strong><br />
+              • Localhost: <code>http://localhost:5173</code><br />
+              • Production: <code>https://task-manager-website-psi.vercel.app</code>
+            </p>
+          </div>
+
+          {/* Secondary: Live Calendar Feed (.ics) */}
+          <div className="settings-card-section" style={{ marginTop: '12px' }}>
+            <div className="settings-card-header">
+              <span className="settings-card-icon">📡</span>
               <div>
-                <strong>Hands-Free Google Calendar Sync</strong>
-                <div className="settings-card-desc">Sync all tasks and alarms automatically</div>
+                <strong>Alternative: Live iCal Feed URL</strong>
+                <div className="settings-card-desc">Subscribe once to sync all tasks into Apple/Outlook/Google Calendar</div>
               </div>
             </div>
             <p className="calendar-help-text">
-              1. <strong>Automatic Invites:</strong> Every task email contains an event invite (.ics) that Google Calendar automatically detects and adds.<br />
-              2. <strong>1-Click Button:</strong> Click the 📅 icon on any task to instantly open and save it in Google Calendar.<br />
-              3. <strong>Live Feed URL:</strong> Or subscribe in Google Calendar (<em>Add other calendar &gt; From URL</em>):
+              In Google Calendar: click <em>Other calendars (+) &gt; From URL</em> and paste:
             </p>
             <div className="copy-url-box">
               <input
