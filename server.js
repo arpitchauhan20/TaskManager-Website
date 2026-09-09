@@ -267,7 +267,7 @@ async function sendAutomatedEmail(recipient, task, isTest = false) {
               </div>
             </div>
             <div style="background: #090d16; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">
-              Sent automatically by TaskFlow Pro • http://localhost:8080
+              Sent automatically by TaskFlow Pro • <a href="https://task-manager-website-psi.vercel.app" style="color: #818cf8; text-decoration: none;">task-manager-website-psi.vercel.app</a>
             </div>
           </div>
         `,
@@ -325,7 +325,7 @@ async function sendAutomatedEmail(recipient, task, isTest = false) {
           </div>
         </div>
         <div style="background: #090d16; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">
-          Sent automatically by TaskFlow Pro • http://localhost:8080
+          Sent automatically by TaskFlow Pro • <a href="https://task-manager-website-psi.vercel.app" style="color: #818cf8; text-decoration: none;">task-manager-website-psi.vercel.app</a>
         </div>
       </div>
     `,

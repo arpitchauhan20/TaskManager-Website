@@ -135,7 +135,7 @@ module.exports = async function handler(req, res) {
         </div>
       </div>
       <div style="background: #090d16; padding: 14px 28px; font-size: 11px; color: #64748b; text-align: center;">
-        Sent via Resend HTTPS API (Port 443) • TaskFlow Pro
+        Sent automatically by TaskFlow Pro • <a href="https://task-manager-website-psi.vercel.app" style="color: #818cf8; text-decoration: none;">task-manager-website-psi.vercel.app</a>
       </div>
     </div>
   `;

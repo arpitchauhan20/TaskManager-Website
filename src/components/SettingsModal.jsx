@@ -57,7 +57,7 @@ export default function SettingsModal({
   };
 
   const handleCopyFeed = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8080';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://task-manager-website-psi.vercel.app';
     const feedUrl = `${origin}/api/calendar.ics`;
     navigator.clipboard.writeText(feedUrl).then(() => {
       setFeedCopied(true);
