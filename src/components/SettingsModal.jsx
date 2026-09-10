@@ -14,14 +14,19 @@ export default function SettingsModal({
   userName,
   reminderEmail,
   onSaveProfile,
-  onShowToast
+  onShowToast,
+  isCalendarConnected: externalConnected,
+  isCalendarLoading = false,
+  onConnectCalendar,
+  onDisconnectCalendar
 }) {
   const [name, setName] = useState(userName || '');
   const [email, setEmail] = useState(reminderEmail || '');
   const [isTesting, setIsTesting] = useState(false);
 
   // Google Calendar OAuth state
-  const [gcalConnected, setGcalConnected] = useState(() => isGoogleCalendarConnected());
+  const isConnected = externalConnected !== undefined ? externalConnected : isGoogleCalendarConnected();
+  const [gcalConnected, setGcalConnected] = useState(isConnected);
   const [gcalEmail, setGcalEmail] = useState(() => getConnectedGoogleEmail());
   const [isConnectingGCal, setIsConnectingGCal] = useState(false);
   const [isTestingGCal, setIsTestingGCal] = useState(false);
@@ -29,9 +34,9 @@ export default function SettingsModal({
   useEffect(() => {
     setName(userName || '');
     setEmail(reminderEmail || '');
-    setGcalConnected(isGoogleCalendarConnected());
+    setGcalConnected(externalConnected !== undefined ? externalConnected : isGoogleCalendarConnected());
     setGcalEmail(getConnectedGoogleEmail());
-  }, [userName, reminderEmail, isOpen]);
+  }, [userName, reminderEmail, isOpen, externalConnected]);
 
   if (!isOpen) return null;
 
@@ -73,6 +78,10 @@ export default function SettingsModal({
   };
 
   const handleConnectGoogle = async () => {
+    if (onConnectCalendar) {
+      onConnectCalendar();
+      return;
+    }
     setIsConnectingGCal(true);
     try {
       await requestGoogleCalendarAccess({ promptConsent: true });
@@ -86,7 +95,13 @@ export default function SettingsModal({
     }
   };
 
-  const handleDisconnectGoogle = () => {
+  const handleDisconnectGoogle = async () => {
+    if (onDisconnectCalendar) {
+      await onDisconnectCalendar();
+      setGcalConnected(false);
+      setGcalEmail(null);
+      return;
+    }
     disconnectGoogleCalendar();
     setGcalConnected(false);
     setGcalEmail(null);

@@ -14,7 +14,10 @@ export default function Sidebar({
   onToggleSound,
   userName,
   onOpenSettings,
-  onOpenNewTask
+  onOpenNewTask,
+  currentUser,
+  onOpenAuthModal,
+  onLogout
 }) {
   const filters = [
     { id: 'all', label: 'All Tasks', icon: '📋', count: taskCounts.all },
@@ -100,31 +103,63 @@ export default function Sidebar({
 
         {/* Sidebar Footer */}
         <div className="sidebar-footer">
-          {/* User Profile */}
+          {/* User Profile / Auth */}
+          {!currentUser ? (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              style={{ width: '100%', marginBottom: '10px' }}
+              onClick={() => {
+                onOpenAuthModal('login');
+                onClose();
+              }}
+            >
+              <span>🔑 Sign In / Register</span>
+            </button>
+          ) : null}
+
           <div className="footer-user-row">
             <div
               className="user-pill"
               onClick={() => {
-                onOpenSettings();
+                if (currentUser) {
+                  onOpenAuthModal('change-password');
+                } else {
+                  onOpenSettings();
+                }
                 onClose();
               }}
-              title="Click to open Settings & Automation"
+              title={currentUser ? `Signed in as ${currentUser.email}. Click to manage password.` : "Click to open Settings & Automation"}
             >
               <div className="user-avatar">
-                {(userName || 'U').charAt(0).toUpperCase()}
+                {((currentUser ? currentUser.name : userName) || 'U').charAt(0).toUpperCase()}
               </div>
               <div className="user-details">
-                <span className="user-name-display">{userName || 'Executive'}</span>
-                <span className="user-edit-hint">⚡ Resend &amp; Calendar Settings</span>
+                <span className="user-name-display">{currentUser ? currentUser.name : (userName || 'Executive')}</span>
+                <span className="user-edit-hint">{currentUser ? currentUser.email : '⚡ Resend & Calendar Settings'}</span>
               </div>
             </div>
 
             <div className="footer-quick-tools">
+              {currentUser && (
+                <button
+                  type="button"
+                  className="tool-icon-btn"
+                  onClick={() => {
+                    onLogout();
+                    onClose();
+                  }}
+                  title="Sign Out"
+                  aria-label="Sign Out"
+                >
+                  🚪
+                </button>
+              )}
               <button
                 type="button"
                 className="tool-icon-btn"
                 onClick={onToggleSound}
-                title={soundEnabled ? 'Mute Sound FX' : 'Enable 5.5s Bell Chime'}
+                title={soundEnabled ? 'Mute Sound FX' : 'Enable 10s Bell Chime'}
               >
                 {soundEnabled ? '🔊' : '🔇'}
               </button>

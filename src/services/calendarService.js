@@ -34,6 +34,82 @@ export function getConnectedGoogleEmail() {
 }
 
 /**
+ * Fetches Google Calendar connection status from the backend API (/api/calendar/status)
+ */
+export async function fetchCalendarStatus() {
+  try {
+    const res = await fetch('/api/calendar/status', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      },
+      credentials: 'include'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return Boolean(data && data.connected === true);
+    }
+  } catch (err) {
+    console.warn('[CalendarService] Error fetching calendar status:', err);
+  }
+  return false;
+}
+
+/**
+ * Initiates the Google OAuth 2.0 flow by redirecting to /auth/google
+ */
+export function startGoogleOAuth() {
+  if (typeof window !== 'undefined') {
+    window.location.href = '/auth/google';
+  }
+}
+
+/**
+ * Disconnects Google Calendar via the backend API (/api/calendar/disconnect)
+ */
+export async function disconnectCalendar() {
+  try {
+    const res = await fetch('/api/calendar/disconnect', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include'
+    });
+    const data = await res.json();
+    // Also clean up any legacy client-side tokens
+    disconnectGoogleCalendar();
+    return data;
+  } catch (err) {
+    console.error('[CalendarService] Error disconnecting calendar:', err);
+    throw err;
+  }
+}
+
+/**
+ * Creates an event directly in Google Calendar with a popup reminder
+ * via the backend POST /api/calendar/reminders endpoint.
+ */
+export async function createCalendarReminder(reminderData) {
+  const res = await fetch('/api/calendar/reminders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include',
+    body: JSON.stringify(reminderData)
+  });
+
+  const data = await res.json().catch(() => ({ success: false, error: 'Network error communicating with server.' }));
+
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to create reminder in Google Calendar.');
+  }
+
+  return data;
+}
+
+/**
  * Disconnects Google Calendar integration and revokes access token.
  */
 export function disconnectGoogleCalendar() {

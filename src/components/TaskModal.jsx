@@ -340,12 +340,12 @@ export default function TaskModal({
                             e.stopPropagation();
                             SoundFX.playReminderChime(soundEnabled);
                           }}
-                          title="Click to test 5.5s reminder chime"
+                          title="Click to test 10s sustained reminder chime"
                         >
-                          ▶ Play 5s
+                          ▶ Play 10s
                         </button>
                       </div>
-                      <span className="channel-choice-desc">5.5s sustained executive harmonic chime</span>
+                      <span className="channel-choice-desc">10s sustained executive harmonic chime</span>
                     </div>
                     <span className="channel-check-mark">{channels.sound ? '✓' : ''}</span>
                   </div>

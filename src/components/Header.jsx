@@ -9,7 +9,10 @@ export default function Header({
   onOpenMobileMenu,
   onOpenNewTask,
   onOpenSettings,
-  onTestAlerts
+  onTestAlerts,
+  currentUser,
+  onOpenAuthModal,
+  onLogout
 }) {
   const [currentDateText, setCurrentDateText] = useState('');
 
@@ -134,6 +137,41 @@ export default function Header({
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
         </button>
+
+        {/* User Account / Auth Actions */}
+        {currentUser ? (
+          <div className="header-user-menu" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => onOpenAuthModal('change-password')}
+              title={`Signed in as ${currentUser.email}. Click to change password.`}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <span>👤</span>
+              <span>{currentUser.name}</span>
+            </button>
+            <button
+              type="button"
+              className="control-btn"
+              onClick={onLogout}
+              title="Log Out"
+              aria-label="Log Out"
+              style={{ fontSize: '13px' }}
+            >
+              🚪
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => onOpenAuthModal('login')}
+            title="Sign in or create account"
+          >
+            <span>Sign In</span>
+          </button>
+        )}
 
         {/* Add Task Button */}
         <button

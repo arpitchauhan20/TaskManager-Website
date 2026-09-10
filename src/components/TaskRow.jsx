@@ -137,7 +137,7 @@ export default function TaskRow({
 
         <div className="task-channels-pill-row">
           {channels.push && <span className="chan-badge push" title="Browser & Mobile Push">🔔 Push</span>}
-          {channels.sound && <span className="chan-badge sound" title="5.5s Audio Bell Chime">🔊 Bell</span>}
+          {channels.sound && <span className="chan-badge sound" title="10s Sustained Audio Bell Chime">🔊 Bell</span>}
           {channels.calendar && <span className="chan-badge cal" title="Calendar Sync Enabled">📅 Cal</span>}
           {channels.email && <span className="chan-badge mail" title="Automated Resend Email">📧 Mail</span>}
         </div>

@@ -9,6 +9,14 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/auth/google/callback",
+      "destination": "/api/calendar/callback"
+    },
+    {
+      "source": "/auth/google",
+      "destination": "/api/calendar/auth"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

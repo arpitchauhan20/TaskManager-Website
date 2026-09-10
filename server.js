@@ -5,12 +5,15 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const webpush = require('web-push');
 const fs = require('fs');
 const path = require('path');
 const { Resend } = require('resend');
 const sendEmailHandler = require('./api/send-email');
 const calendarFeedHandler = require('./api/calendar');
+const authRoutes = require('./routes/authRoutes');
+const calendarRoutes = require('./routes/calendarRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -44,8 +47,15 @@ const RESEND_API_KEY = rawResendKey.trim().replace(/^["'`]+|["'`]+$/g, '');
 const FROM_EMAIL = resolveFromEmail(process.env.FROM_EMAIL);
 const resendClient = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
+
+// Mount Authentication System Endpoints
+app.use('/api/auth', authRoutes);
+
+// Mount Google Calendar OAuth & API Endpoints
+app.use('/', calendarRoutes);
 
 // Explicit Service Worker & PWA Manifest Routes (Must serve with correct headers)
 const DIST_DIR = path.join(__dirname, 'dist');

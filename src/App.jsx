@@ -8,14 +8,21 @@ import TaskList from './components/TaskList';
 import TaskModal from './components/TaskModal';
 import SettingsModal from './components/SettingsModal';
 import ConfirmModal from './components/ConfirmModal';
+import AuthModal from './components/AuthModal';
+import CalendarConnectionCard from './components/CalendarConnectionCard';
+import CalendarReminderCard from './components/CalendarReminderCard';
 import ToastContainer from './components/ToastContainer';
 import { SoundFX } from './services/soundEngine';
+import { AuthClient } from './services/authClient';
 import {
   openGoogleCalendar,
   downloadICS,
   isGoogleCalendarConnected,
   requestGoogleCalendarAccess,
-  saveEventToGoogleCalendar
+  saveEventToGoogleCalendar,
+  fetchCalendarStatus,
+  disconnectCalendar,
+  startGoogleOAuth
 } from './services/calendarService';
 import { sendTaskEmail } from './services/emailService';
 import {
@@ -66,15 +73,106 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState(null);
 
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+  const [urlResetToken, setUrlResetToken] = useState('');
+
+  // Check existing session on load & listen for ?resetToken in URL
+  useEffect(() => {
+    AuthClient.getCurrentUser().then(user => {
+      if (user) {
+        setCurrentUser(user);
+        if (user.name) setUserName(user.name);
+        if (user.email) setReminderEmail(user.email);
+      }
+    });
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('resetToken');
+      if (token) {
+        setUrlResetToken(token);
+        setAuthModalMode('reset');
+        setIsAuthModalOpen(true);
+      }
+    }
+  }, []);
+
+  const handleAuthSuccess = (user) => {
+    setCurrentUser(user);
+    if (user.name) setUserName(user.name);
+    if (user.email) setReminderEmail(user.email);
+  };
+
+  const handleLogout = async () => {
+    await AuthClient.logout();
+    setCurrentUser(null);
+    showToast('info', '👋', 'You have been logged out.');
+  };
+
+  const handleOpenAuthModal = (mode = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  // Google Calendar Connection State
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false);
+
+  // Sync Google Calendar connection status and handle OAuth callback redirects
+  useEffect(() => {
+    fetchCalendarStatus().then(connected => {
+      setIsCalendarConnected(connected);
+    });
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('calendar_connected') === 'true') {
+        setIsCalendarConnected(true);
+        showToast('success', '📅', 'Google Calendar connected successfully!');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (params.get('calendar_error')) {
+        const err = params.get('calendar_error');
+        showToast('error', '⚠️', err === 'denied' ? 'Google Calendar access was denied.' : 'Google Calendar connection failed.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [currentUser]);
+
+  const handleConnectCalendar = () => {
+    if (!currentUser) {
+      handleOpenAuthModal('login');
+      showToast('info', '🔒', 'Please sign in before connecting Google Calendar.');
+      return;
+    }
+    startGoogleOAuth();
+  };
+
+  const handleDisconnectCalendar = async () => {
+    setIsCalendarLoading(true);
+    try {
+      await disconnectCalendar();
+      setIsCalendarConnected(false);
+      showToast('info', '📅', 'Google Calendar disconnected.');
+    } catch (err) {
+      showToast('error', '❌', 'Failed to disconnect Google Calendar.');
+    } finally {
+      setIsCalendarLoading(false);
+    }
+  };
+
   // Toasts
   const [toasts, setToasts] = useState([]);
 
   const showToast = useCallback((type, icon, message) => {
     const id = 'toast_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     setToasts(prev => [...prev, { id, type, icon, message }]);
+    const duration = (type === 'reminder' || type === 'error') ? 11000 : 4500;
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4500);
+    }, duration);
   }, []);
 
   const [pushSub, setPushSub] = useState(null);
@@ -637,6 +735,9 @@ export default function App() {
           setTaskToEdit(null);
           setIsTaskModalOpen(true);
         }}
+        currentUser={currentUser}
+        onOpenAuthModal={handleOpenAuthModal}
+        onLogout={handleLogout}
       />
 
       {/* Main Workspace Canvas */}
@@ -655,6 +756,9 @@ export default function App() {
           }}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onTestAlerts={handleTestAlerts}
+          currentUser={currentUser}
+          onOpenAuthModal={handleOpenAuthModal}
+          onLogout={handleLogout}
         />
 
         {/* Scrollable Canvas Area with Mobile Pull-to-Refresh */}
@@ -694,6 +798,26 @@ export default function App() {
               setTaskToEdit(null);
               setIsTaskModalOpen(true);
             }}
+          />
+
+          {/* Google Calendar Connection Section */}
+          <CalendarConnectionCard
+            isConnected={isCalendarConnected}
+            isLoading={isCalendarLoading}
+            currentUser={currentUser}
+            onConnect={handleConnectCalendar}
+            onDisconnect={handleDisconnectCalendar}
+            onOpenAuthModal={handleOpenAuthModal}
+          />
+
+          {/* Direct Google Calendar Reminder Section */}
+          <CalendarReminderCard
+            isCalendarConnected={isCalendarConnected}
+            isCalendarLoading={isCalendarLoading}
+            currentUser={currentUser}
+            onConnectCalendar={handleConnectCalendar}
+            onOpenAuthModal={handleOpenAuthModal}
+            onShowToast={showToast}
           />
 
           {/* Tasks Grid Feed */}
@@ -739,6 +863,23 @@ export default function App() {
         userName={userName}
         reminderEmail={reminderEmail}
         onSaveProfile={handleSaveProfile}
+        onShowToast={showToast}
+        isCalendarConnected={isCalendarConnected}
+        isCalendarLoading={isCalendarLoading}
+        onConnectCalendar={handleConnectCalendar}
+        onDisconnectCalendar={handleDisconnectCalendar}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setUrlResetToken('');
+        }}
+        initialMode={authModalMode}
+        resetToken={urlResetToken}
+        currentUser={currentUser}
+        onAuthSuccess={handleAuthSuccess}
         onShowToast={showToast}
       />
 
