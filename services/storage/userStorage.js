@@ -18,12 +18,17 @@ const USER_COLUMNS = [
   'updated_at'
 ];
 
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DATA_DIR = isVercel ? path.join('/tmp', 'data') : path.join(__dirname, '..', '..', 'data');
 const LOCAL_USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 // Ensure data directory exists for local fallback
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (err) {
+  console.warn('[UserStorage] Could not create local data directory:', err.message);
 }
 
 // Local fallback helpers
