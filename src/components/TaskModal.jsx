@@ -390,8 +390,8 @@ export default function TaskModal({
                       </span>
                       <span className="channel-input-hint">
                         {channels.calendar
-                          ? 'Event automatically saves directly on this Gmail ID’s Google Calendar'
-                          : 'Destination where Resend delivers the reminder email'}
+                          ? 'Calendar invite (.ics) & task reminder will be delivered directly to this Gmail ID'
+                          : 'Destination where reminder email alerts are delivered'}
                       </span>
                     </div>
                     <div className="input-with-icon">
