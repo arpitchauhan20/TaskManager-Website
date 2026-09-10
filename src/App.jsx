@@ -318,26 +318,30 @@ export default function App() {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    if (currentFilter === 'today') {
-      result = result.filter(t => {
-        if (!t.deadline || t.completed) return false;
-        const d = new Date(t.deadline).getTime();
-        return d <= todayEnd.getTime();
-      });
-    } else if (currentFilter === 'upcoming') {
-      result = result.filter(t => {
-        if (!t.deadline || t.completed) return false;
-        return new Date(t.deadline).getTime() > now;
-      });
-    } else if (currentFilter === 'high') {
-      result = result.filter(t => t.priority === 'high' && !t.completed);
-    } else if (currentFilter === 'overdue') {
-      result = result.filter(t => {
-        if (!t.deadline || t.completed) return false;
-        return new Date(t.deadline).getTime() < now;
-      });
-    } else if (currentFilter === 'completed') {
+    if (currentFilter === 'completed') {
       result = result.filter(t => t.completed);
+    } else {
+      result = result.filter(t => !t.completed);
+
+      if (currentFilter === 'today') {
+        result = result.filter(t => {
+          if (!t.deadline) return false;
+          const d = new Date(t.deadline).getTime();
+          return d <= todayEnd.getTime();
+        });
+      } else if (currentFilter === 'upcoming') {
+        result = result.filter(t => {
+          if (!t.deadline) return false;
+          return new Date(t.deadline).getTime() > now;
+        });
+      } else if (currentFilter === 'high') {
+        result = result.filter(t => t.priority === 'high');
+      } else if (currentFilter === 'overdue') {
+        result = result.filter(t => {
+          if (!t.deadline) return false;
+          return new Date(t.deadline).getTime() < now;
+        });
+      }
     }
 
     result.sort((a, b) => {
@@ -380,12 +384,12 @@ export default function App() {
 
   const stats = useMemo(() => {
     return {
-      total: tasks.length,
+      total: taskCounts.all,
       today: taskCounts.today,
       high: taskCounts.high,
       completed: taskCounts.completed
     };
-  }, [tasks, taskCounts]);
+  }, [taskCounts]);
 
   const handleQuickAdd = (title) => {
     const def = new Date();

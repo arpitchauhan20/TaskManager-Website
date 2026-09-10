@@ -37,7 +37,7 @@ export default function TaskList({
           </h3>
           <p className="empty-subtitle">
             {currentFilter === 'all'
-              ? 'Create your first task to start organizing deadlines and automated alerts.'
+              ? 'All clear! Create a new task or check the Completed tab.'
               : 'Try changing your filter or add a new task.'}
           </p>
           <button
