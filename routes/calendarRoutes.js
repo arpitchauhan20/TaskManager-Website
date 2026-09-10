@@ -117,7 +117,7 @@ router.get(['/auth/google/callback', '/api/calendar/callback'], async (req, res)
     };
 
     if (tokens.refresh_token) {
-      updates.google_refresh_token = tokens.refresh_token;
+      updates.google_refresh_token = googleCalendarService.encryptToken(tokens.refresh_token);
     }
     if (googleId) {
       updates.google_id = googleId;

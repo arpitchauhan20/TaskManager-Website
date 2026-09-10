@@ -274,7 +274,8 @@ async function runFullFlowTestSuite() {
     // Mock getCalendarClient so no real Google network call is executed in automated test
     const originalGetCalendarClient = googleCalendarService.getCalendarClient;
     googleCalendarService.getCalendarClient = function(refreshToken) {
-      assert(refreshToken === 'mock_gcal_refresh_token_final', 'Correct refresh token passed to Google Calendar client');
+      const decrypted = googleCalendarService.decryptToken(refreshToken);
+      assert(decrypted === 'mock_gcal_refresh_token_final', 'Correct refresh token passed to Google Calendar client');
       return {
         events: {
           insert: async ({ calendarId, requestBody }) => {

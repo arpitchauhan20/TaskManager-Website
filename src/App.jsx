@@ -816,6 +816,7 @@ export default function App() {
             isCalendarLoading={isCalendarLoading}
             currentUser={currentUser}
             onConnectCalendar={handleConnectCalendar}
+            onDisconnectCalendar={handleDisconnectCalendar}
             onOpenAuthModal={handleOpenAuthModal}
             onShowToast={showToast}
           />

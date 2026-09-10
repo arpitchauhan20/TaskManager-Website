@@ -2,10 +2,62 @@
 // Google Calendar & OAuth 2.0 Backend Service
 // Official googleapis integration
 // ==========================================
+const crypto = require('crypto');
 const { google } = require('googleapis');
 const userStorage = require('./storage/userStorage');
 
+// Helper to derive a 32-byte encryption key for AES-256-GCM
+function getEncryptionKey() {
+  const secret = process.env.TOKEN_ENCRYPTION_KEY || process.env.JWT_SECRET || 'taskflow-pro-saas-token-encryption-key-2026';
+  return crypto.scryptSync(secret, 'taskflow-saas-salt', 32);
+}
+
+// Encrypt refresh token before saving in storage
+function encryptToken(plainToken) {
+  if (!plainToken || typeof plainToken !== 'string') return '';
+  if (plainToken.startsWith('enc:')) return plainToken; // Already encrypted
+
+  const iv = crypto.randomBytes(12); // 96-bit IV
+  const cipher = crypto.createCipheriv('aes-256-gcm', getEncryptionKey(), iv);
+  let encrypted = cipher.update(plainToken, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+  return `enc:${iv.toString('hex')}:${authTag}:${encrypted}`;
+}
+
+// Decrypt refresh token when retrieving for Google API client
+function decryptToken(encryptedText) {
+  if (!encryptedText || typeof encryptedText !== 'string') return '';
+  if (!encryptedText.startsWith('enc:')) {
+    return encryptedText; // Legacy / unencrypted token support
+  }
+
+  try {
+    const parts = encryptedText.split(':');
+    if (parts.length !== 4) return encryptedText;
+    const iv = Buffer.from(parts[1], 'hex');
+    const authTag = Buffer.from(parts[2], 'hex');
+    const cipherHex = parts[3];
+
+    const decipher = crypto.createDecipheriv('aes-256-gcm', getEncryptionKey(), iv);
+    decipher.setAuthTag(authTag);
+    let decrypted = decipher.update(cipherHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (err) {
+    console.warn('[GoogleCalendarService] Failed to decrypt refresh token:', err.message);
+    return encryptedText;
+  }
+}
+
 class GoogleCalendarService {
+  encryptToken(plainToken) {
+    return encryptToken(plainToken);
+  }
+
+  decryptToken(encryptedText) {
+    return decryptToken(encryptedText);
+  }
   getClientId() {
     return (process.env.GOOGLE_CLIENT_ID || '').trim();
   }
@@ -117,8 +169,9 @@ class GoogleCalendarService {
     }
 
     const oauth2Client = this.getOAuth2Client();
+    const cleanToken = decryptToken(user.google_refresh_token);
     oauth2Client.setCredentials({
-      refresh_token: user.google_refresh_token
+      refresh_token: cleanToken
     });
 
     try {
@@ -147,7 +200,7 @@ class GoogleCalendarService {
   async revokeUserCalendar(user) {
     if (!user) return { success: true };
 
-    const refreshToken = user.google_refresh_token;
+    const refreshToken = decryptToken(user.google_refresh_token);
     if (refreshToken) {
       try {
         const oauth2Client = this.getOAuth2Client();
@@ -172,8 +225,9 @@ class GoogleCalendarService {
    */
   getCalendarClient(refreshToken) {
     const oauth2Client = this.getOAuth2Client();
+    const cleanToken = decryptToken(refreshToken);
     oauth2Client.setCredentials({
-      refresh_token: refreshToken
+      refresh_token: cleanToken
     });
     return google.calendar({ version: 'v3', auth: oauth2Client });
   }

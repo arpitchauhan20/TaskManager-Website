@@ -2669,6 +2669,48 @@ html, body {
   letter-spacing: -0.01em;
 }
 
+.calendar-connected-subline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.calendar-brand-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.calendar-status-check {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.btn-disconnect-subtle {
+  background: transparent;
+  border: none;
+  color: #fb7185;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-decoration: underline;
+  transition: opacity 0.2s ease;
+}
+
+.btn-disconnect-subtle:hover {
+  opacity: 0.8;
+}
+
+.disconnected-card-heading {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 2px 0;
+}
+
 .reminder-subtitle {
   font-size: 12px;
   color: var(--text-secondary);

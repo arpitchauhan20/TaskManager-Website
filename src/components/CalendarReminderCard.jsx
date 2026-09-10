@@ -6,6 +6,7 @@ export default function CalendarReminderCard({
   isCalendarLoading,
   currentUser,
   onConnectCalendar,
+  onDisconnectCalendar,
   onOpenAuthModal,
   onShowToast
 }) {
@@ -88,7 +89,7 @@ export default function CalendarReminderCard({
       if (res.success && res.event) {
         setLastCreatedEvent(res.event);
         if (onShowToast) {
-          onShowToast('success', '📅', '✓ Reminder added to Google Calendar!');
+          onShowToast('success', '📅', '✓ Added to Google Calendar');
         }
       } else {
         throw new Error(res.error || 'Could not create reminder');
@@ -112,10 +113,26 @@ export default function CalendarReminderCard({
     <div className="calendar-reminder-card">
       <div className="reminder-card-header">
         <div className="reminder-header-title">
-          <span className="reminder-header-icon">⏰</span>
+          <span className="reminder-header-icon">📅</span>
           <div>
             <h3 className="reminder-title">Calendar Reminder</h3>
-            <span className="reminder-subtitle">Instant Google Calendar event with popup notification</span>
+            {isCalendarConnected && (
+              <div className="calendar-connected-subline">
+                <span className="calendar-brand-label">Google Calendar:</span>
+                <span className="calendar-status-check">✓ Connected</span>
+                {onDisconnectCalendar && (
+                  <button
+                    type="button"
+                    className="btn-disconnect-subtle"
+                    onClick={onDisconnectCalendar}
+                    disabled={isCalendarLoading}
+                    title="Disconnect Google Calendar"
+                  >
+                    Disconnect
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="reminder-tz-badge" title="Detected IANA Timezone">
@@ -125,7 +142,8 @@ export default function CalendarReminderCard({
 
       {!isCalendarConnected ? (
         <div className="reminder-disconnected-box">
-          <p className="reminder-disconnected-text">Google Calendar isn't connected.</p>
+          <h4 className="disconnected-card-heading">Google Calendar</h4>
+          <p className="reminder-disconnected-text">Connect your Google Calendar to create reminders.</p>
           <button
             type="button"
             className="btn btn-connect-google"
@@ -139,7 +157,7 @@ export default function CalendarReminderCard({
         <div className="reminder-success-box">
           <div className="success-banner">
             <span className="success-icon">✓</span>
-            <span className="success-message">Reminder added to Google Calendar</span>
+            <span className="success-message">Added to Google Calendar</span>
           </div>
 
           <div className="success-actions">

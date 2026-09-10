@@ -172,7 +172,8 @@ async function runCalendarTestSuite() {
       updatedUser.google_calendar_connected === true || updatedUser.google_calendar_connected === 'true',
       'User storage marks google_calendar_connected as true'
     );
-    assert(updatedUser.google_refresh_token === 'mock_refresh_token_xyz_999', 'User storage securely holds refresh token');
+    assert(updatedUser.google_refresh_token.startsWith('enc:'), 'User refresh token is encrypted at rest');
+    assert(googleCalendarService.decryptToken(updatedUser.google_refresh_token) === 'mock_refresh_token_xyz_999', 'User storage holds valid decryptable refresh token');
     assert(updatedUser.google_id === 'google_user_id_456', 'User storage associates Google account ID');
 
     // 8. Test GET /api/calendar/status when connected
