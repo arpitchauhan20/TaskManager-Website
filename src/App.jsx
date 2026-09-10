@@ -43,20 +43,10 @@ const saveStorage = (key, value) => {
 };
 
 export default function App() {
-  const [tasks, setTasks] = useState(() => loadStorage('taskflow_tasks', [
-    {
-      id: 'task_demo_1',
-      title: 'Review Project Roadmap & Vercel Deployment',
-      description: 'Prepare production environment variables and verify Resend HTTPS email delivery.',
-      deadline: new Date(Date.now() + 2 * 3600000).toISOString(),
-      priority: 'high',
-      reminderMode: 'preset',
-      reminderPresetMinutes: 15,
-      channels: { push: true, sound: true, calendar: true, email: true },
-      completed: false,
-      createdAt: new Date().toISOString()
-    }
-  ]));
+  const [tasks, setTasks] = useState(() => {
+    const saved = loadStorage('taskflow_tasks', []);
+    return Array.isArray(saved) ? saved.filter(t => t.id !== 'task_demo_1') : [];
+  });
 
   const [userName, setUserName] = useState(() => loadStorage('taskflow_user', 'My Workspace'));
   const [reminderEmail, setReminderEmail] = useState(() => loadStorage('taskflow_email', ''));

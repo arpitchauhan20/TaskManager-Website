@@ -19,7 +19,6 @@ export default function SettingsModal({
   const [name, setName] = useState(userName || '');
   const [email, setEmail] = useState(reminderEmail || '');
   const [isTesting, setIsTesting] = useState(false);
-  const [feedCopied, setFeedCopied] = useState(false);
 
   // Google Calendar OAuth state
   const [gcalConnected, setGcalConnected] = useState(() => isGoogleCalendarConnected());
@@ -115,16 +114,6 @@ export default function SettingsModal({
     } finally {
       setIsTestingGCal(false);
     }
-  };
-
-  const handleCopyFeed = () => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://task-manager-website-psi.vercel.app';
-    const feedUrl = `${origin}/api/calendar.ics`;
-    navigator.clipboard.writeText(feedUrl).then(() => {
-      setFeedCopied(true);
-      onShowToast('success', '📋', 'Calendar feed URL copied! In Google Calendar: Other calendars (+) > From URL');
-      setTimeout(() => setFeedCopied(false), 3000);
-    });
   };
 
   return (
@@ -250,41 +239,6 @@ export default function SettingsModal({
                   </button>
                 </>
               )}
-            </div>
-
-            <p className="form-hint" style={{ marginTop: '10px', fontSize: '11px', lineHeight: '1.45' }}>
-              💡 <strong>Authorized Origins in Google Cloud Console:</strong><br />
-              • Localhost: <code>http://localhost:5173</code><br />
-              • Production: <code>https://task-manager-website-psi.vercel.app</code>
-            </p>
-          </div>
-
-          {/* Secondary: Live Calendar Feed (.ics) */}
-          <div className="settings-card-section" style={{ marginTop: '12px' }}>
-            <div className="settings-card-header">
-              <span className="settings-card-icon">📡</span>
-              <div>
-                <strong>Alternative: Live iCal Feed URL</strong>
-                <div className="settings-card-desc">Subscribe once to sync all tasks into Apple/Outlook/Google Calendar</div>
-              </div>
-            </div>
-            <p className="calendar-help-text">
-              In Google Calendar: click <em>Other calendars (+) &gt; From URL</em> and paste:
-            </p>
-            <div className="copy-url-box">
-              <input
-                className="form-input feed-url-input"
-                type="text"
-                readOnly
-                value={typeof window !== 'undefined' ? `${window.location.origin}/api/calendar.ics` : '/api/calendar.ics'}
-              />
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={handleCopyFeed}
-              >
-                {feedCopied ? '✓ Copied!' : 'Copy'}
-              </button>
             </div>
           </div>
 
