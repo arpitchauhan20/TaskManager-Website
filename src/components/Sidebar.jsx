@@ -116,32 +116,26 @@ export default function Sidebar({
             >
               <span>🔑 Sign In / Register</span>
             </button>
-          ) : null}
-
-          <div className="footer-user-row">
-            <div
-              className="user-pill"
-              onClick={() => {
-                if (currentUser) {
+          ) : (
+            <div className="footer-user-row">
+              <div
+                className="user-pill"
+                onClick={() => {
                   onOpenAuthModal('change-password');
-                } else {
-                  onOpenSettings();
-                }
-                onClose();
-              }}
-              title={currentUser ? `Signed in as ${currentUser.email}. Click to manage password.` : "Click to open Settings & Automation"}
-            >
-              <div className="user-avatar">
-                {((currentUser ? currentUser.name : userName) || 'U').charAt(0).toUpperCase()}
+                  onClose();
+                }}
+                title={`Signed in as ${currentUser.email}. Click to manage password.`}
+              >
+                <div className="user-avatar">
+                  {(currentUser.name || 'U').charAt(0).toUpperCase()}
+                </div>
+                <div className="user-details">
+                  <span className="user-name-display">{currentUser.name}</span>
+                  <span className="user-edit-hint">{currentUser.email}</span>
+                </div>
               </div>
-              <div className="user-details">
-                <span className="user-name-display">{currentUser ? currentUser.name : (userName || 'Executive')}</span>
-                <span className="user-edit-hint">{currentUser ? currentUser.email : '⚡ Resend & Calendar Settings'}</span>
-              </div>
-            </div>
 
-            <div className="footer-quick-tools">
-              {currentUser && (
+              <div className="footer-quick-tools">
                 <button
                   type="button"
                   className="tool-icon-btn"
@@ -154,7 +148,21 @@ export default function Sidebar({
                 >
                   🚪
                 </button>
-              )}
+                <button
+                  type="button"
+                  className="tool-icon-btn"
+                  onClick={onToggleSound}
+                  title={soundEnabled ? 'Mute Sound FX' : 'Enable 10s Bell Chime'}
+                >
+                  {soundEnabled ? '🔊' : '🔇'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Sound toggle for logged-out users */}
+          {!currentUser && (
+            <div className="footer-quick-tools" style={{ justifyContent: 'center', marginBottom: '8px' }}>
               <button
                 type="button"
                 className="tool-icon-btn"
@@ -164,7 +172,7 @@ export default function Sidebar({
                 {soundEnabled ? '🔊' : '🔇'}
               </button>
             </div>
-          </div>
+          )}
 
           {/* Theme Palette Swatches */}
           <div className="palette-picker-row">
