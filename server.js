@@ -10,8 +10,8 @@ const webpush = require('web-push');
 const fs = require('fs');
 const path = require('path');
 const { Resend } = require('resend');
-const sendEmailHandler = require('./api/send-email');
-const calendarFeedHandler = require('./api/calendar');
+const sendEmailHandler = require('./services/sendEmailHandler');
+const calendarFeedHandler = require('./services/calendarFeedHandler');
 const authRoutes = require('./routes/authRoutes');
 const calendarRoutes = require('./routes/calendarRoutes');
 

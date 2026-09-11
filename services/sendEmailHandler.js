@@ -80,16 +80,13 @@ function resolveFromEmail(raw) {
   if (!raw || typeof raw !== 'string') return fallback;
 
   let cleaned = raw.trim();
-  // Strip leading variable assignment if user pasted 'FROM_EMAIL=...' in Vercel value field
   if (cleaned.startsWith('FROM_EMAIL=')) {
     cleaned = cleaned.replace(/^FROM_EMAIL=/, '').trim();
   }
-  // Strip surrounding quotes or backticks (", ', `)
   cleaned = cleaned.replace(/^["'`]+|["'`]+$/g, '').trim();
 
   if (!cleaned) return fallback;
 
-  // Pattern 1: Name <email@domain.com>
   const matchWithAngle = cleaned.match(/^([^<]*)<([^>]+)>$/);
   if (matchWithAngle) {
     const name = matchWithAngle[1].trim();
@@ -99,12 +96,10 @@ function resolveFromEmail(raw) {
     }
   }
 
-  // Pattern 2: Pure email address without angle brackets: email@domain.com
   if (cleaned.includes('@') && !cleaned.includes('<') && !cleaned.includes('>')) {
     return `TaskFlow Pro <${cleaned}>`;
   }
 
-  // Pattern 3: User only entered a name without an email address
   if (!cleaned.includes('@')) {
     return `${cleaned} <onboarding@resend.dev>`;
   }
