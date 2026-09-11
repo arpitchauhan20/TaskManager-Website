@@ -230,6 +230,7 @@ router.put('/password', authMiddleware, async (req, res) => {
 router.post('/forgot-password', rateLimiter({ max: 8, message: 'Too many reset requests. Please try again later.' }), async (req, res) => {
   try {
     const { email } = req.body || {};
+    const isProduction = process.env.NODE_ENV === 'production';
     const genericResponse = {
       success: true,
       message: 'If an account with that email exists, a password reset link has been sent.'
@@ -259,13 +260,23 @@ router.post('/forgot-password', rateLimiter({ max: 8, message: 'Too many reset r
       });
 
       // 4. Send reset email via modular email service
-      emailService.sendPasswordResetEmail({
+      const emailResult = await emailService.sendPasswordResetEmail({
         to: user.email,
         name: user.name,
         resetToken: rawToken
       }).catch(err => {
         console.warn('[Auth API] Failed to deliver password reset email:', err.message);
+        return null;
       });
+
+      // In development mode, return the reset URL so user can test without email
+      if (!isProduction && emailResult && emailResult.resetUrl) {
+        return res.status(200).json({
+          ...genericResponse,
+          message: 'Password reset link generated. Since this is development mode, the link is shown below.',
+          resetUrl: emailResult.resetUrl
+        });
+      }
     }
 
     return res.status(200).json(genericResponse);

@@ -73,6 +73,13 @@ class EmailService {
       </div>
     `;
 
+    // Always log the reset URL for development/debugging
+    console.log('\n' + '='.repeat(70));
+    console.log('[EmailService] PASSWORD RESET LINK GENERATED');
+    console.log(`  User:  ${name} <${to}>`);
+    console.log(`  Link:  ${resetUrl}`);
+    console.log('='.repeat(70) + '\n');
+
     // 1. Try Resend HTTPS API
     const resend = this.getResendClient();
     if (resend) {
@@ -85,9 +92,14 @@ class EmailService {
         });
         if (!error) {
           console.log(`[EmailService] Password reset email sent to ${to} (ID: ${data?.id})`);
-          return { success: true, messageId: data?.id };
+          return { success: true, messageId: data?.id, resetUrl };
         }
-        console.warn('[EmailService] Resend returned error:', error.message);
+        // Resend free tier only delivers to the account owner email
+        if (error.message && (error.message.includes('validation') || error.message.includes('not allowed'))) {
+          console.warn(`[EmailService] Resend free tier restriction: emails can only be sent to the Resend account owner email. To send to ${to}, verify a custom domain in Resend Dashboard.`);
+        } else {
+          console.warn('[EmailService] Resend returned error:', error.message);
+        }
       } catch (err) {
         console.warn('[EmailService] Resend exception:', err.message);
       }
@@ -118,8 +130,8 @@ class EmailService {
       }
     }
 
-    console.log(`[EmailService] (Development Notice) Password reset link for ${to}:\n${resetUrl}`);
-    return { success: true, previewUrl: resetUrl };
+    console.log(`[EmailService] No email provider delivered. Use the reset link logged above to test locally.`);
+    return { success: true, previewUrl: resetUrl, resetUrl };
   }
 }
 
