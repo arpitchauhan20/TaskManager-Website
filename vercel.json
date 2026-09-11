@@ -6,15 +6,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api"
     },
     {
-      "source": "/auth/google/callback",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/auth/google",
-      "destination": "/api/index.js"
+      "source": "/auth/(.*)",
+      "destination": "/api"
     },
     {
       "source": "/(.*)",

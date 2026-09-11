@@ -24,7 +24,12 @@ async function request(endpoint, options = {}) {
     credentials: 'include' // Sends HTTP-only cookies
   });
 
-  const data = await response.json().catch(() => ({ success: false, error: 'Network or server error' }));
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = { success: false, error: response.status >= 500 ? 'Server error occurred. Please try again in a moment.' : 'Network error. Please check your connection.' };
+  }
 
   if (!response.ok) {
     throw new Error(data.error || 'Request failed');

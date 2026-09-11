@@ -19,18 +19,21 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
 
-// Normalization middleware for Vercel rewrites
+// Normalization middleware for Vercel rewrites:
+// Handles both rewritten path (/api) and original URL (/api/auth/register)
 app.use((req, res, next) => {
-  if (req.headers['x-matched-path'] && (req.url === '/' || req.url.startsWith('/api/index'))) {
-    req.url = req.headers['x-matched-path'];
+  const matched = req.headers['x-matched-path'];
+  if (matched && (req.url === '/' || req.url === '/api' || req.url === '/api/' || req.url.startsWith('/api/index'))) {
+    req.url = matched;
   }
   next();
 });
 
-// Mount Authentication System Endpoints
-app.use('/api/auth', authRoutes);
+// Mount Authentication System Endpoints (supports both /api/auth and /auth)
+app.use(['/api/auth', '/auth'], authRoutes);
 
 // Mount Google Calendar OAuth & API Endpoints
+app.use(['/api/calendar', '/calendar'], calendarRoutes);
 app.use('/', calendarRoutes);
 
 // Mount Resend HTTPS API endpoints
@@ -71,4 +74,18 @@ app.delete(['/api/cancel-reminder', '/cancel-reminder'], (req, res) => {
   res.status(200).json({ success: true });
 });
 
-module.exports = app;
+// Fallback error handler
+app.use((err, req, res, next) => {
+  console.error('[Vercel Serverless Error]', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({
+    success: false,
+    error: err.message || 'Internal server error'
+  });
+});
+
+module.exports = (req, res) => {
+  return app(req, res);
+};
