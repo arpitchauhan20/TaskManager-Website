@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { google } = require('googleapis');
 const { JWT } = require('google-auth-library');
 
 const USERS_SHEET_TITLE = 'Users';
@@ -46,6 +46,9 @@ function readLocalUsers() {
 
 function writeLocalUsers(users) {
   try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
     fs.writeFileSync(LOCAL_USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
   } catch (err) {
     console.error('[UserStorage] Could not write local users file:', err.message);
@@ -54,8 +57,8 @@ function writeLocalUsers(users) {
 
 class UserStorage {
   constructor() {
-    this.sheetDoc = null;
-    this.usersSheet = null;
+    this.sheetsClient = null;
+    this.spreadsheetId = null;
     this.isUsingGoogleSheets = false;
     this.initPromise = null;
   }
@@ -72,107 +75,148 @@ class UserStorage {
     const rawPrivateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
 
     if (!spreadsheetId || !clientEmail || !rawPrivateKey) {
-      console.log('[UserStorage] Google Sheets credentials not fully set in .env. Using secure local file fallback (data/users.json).');
+      console.log('[UserStorage] Google Sheets credentials not fully set in .env. Using secure local file fallback.');
       this.isUsingGoogleSheets = false;
       return;
     }
 
     try {
       const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
-      const serviceAccountAuth = new JWT({
+      const auth = new JWT({
         email: clientEmail,
         key: privateKey,
         scopes: ['https://www.googleapis.com/auth/spreadsheets']
       });
 
-      const doc = new GoogleSpreadsheet(spreadsheetId, serviceAccountAuth);
-      await doc.loadInfo();
+      this.sheetsClient = google.sheets({ version: 'v4', auth });
+      this.spreadsheetId = spreadsheetId;
 
-      let sheet = doc.sheetsByTitle[USERS_SHEET_TITLE];
-      if (!sheet) {
+      // Check if 'Users' sheet exists, create if not
+      const meta = await this.sheetsClient.spreadsheets.get({ spreadsheetId });
+      const sheetsList = meta.data.sheets || [];
+      const userSheet = sheetsList.find(s => s.properties?.title === USERS_SHEET_TITLE);
+
+      if (!userSheet) {
         console.log(`[UserStorage] Creating '${USERS_SHEET_TITLE}' sheet in Google Spreadsheet...`);
-        sheet = await doc.addSheet({
-          title: USERS_SHEET_TITLE,
-          headerValues: USER_COLUMNS
+        await this.sheetsClient.spreadsheets.batchUpdate({
+          spreadsheetId,
+          requestBody: {
+            requests: [
+              {
+                addSheet: {
+                  properties: { title: USERS_SHEET_TITLE }
+                }
+              }
+            ]
+          }
+        });
+        // Set header row
+        await this.sheetsClient.spreadsheets.values.update({
+          spreadsheetId,
+          range: `${USERS_SHEET_TITLE}!A1:K1`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: [USER_COLUMNS] }
         });
       } else {
-        await sheet.loadHeaderRow();
-        // Verify or populate headers if empty
-        if (!sheet.headerValues || sheet.headerValues.length === 0) {
-          await sheet.setHeaderRow(USER_COLUMNS);
+        // Ensure header exists
+        const headerRes = await this.sheetsClient.spreadsheets.values.get({
+          spreadsheetId,
+          range: `${USERS_SHEET_TITLE}!A1:K1`
+        });
+        const headerRow = headerRes.data.values?.[0] || [];
+        if (headerRow.length === 0) {
+          await this.sheetsClient.spreadsheets.values.update({
+            spreadsheetId,
+            range: `${USERS_SHEET_TITLE}!A1:K1`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [USER_COLUMNS] }
+          });
         }
       }
 
-      this.sheetDoc = doc;
-      this.usersSheet = sheet;
       this.isUsingGoogleSheets = true;
-      console.log(`[UserStorage] Connected to Google Sheets. Users stored in '${USERS_SHEET_TITLE}' sheet.`);
+      console.log(`[UserStorage] Connected to Google Sheets via official SDK. Users stored in '${USERS_SHEET_TITLE}'.`);
     } catch (err) {
       console.warn('[UserStorage] Google Sheets connection failed:', err.message);
-      console.warn('[UserStorage] Falling back to local data/users.json store.');
+      console.warn('[UserStorage] Falling back to local data storage.');
       this.isUsingGoogleSheets = false;
     }
   }
 
-  // Find user by normalized email
+  // Read all user records from Google Sheets
+  async _getGoogleSheetUsers() {
+    if (!this.isUsingGoogleSheets || !this.sheetsClient) return null;
+    try {
+      const res = await this.sheetsClient.spreadsheets.values.get({
+        spreadsheetId: this.spreadsheetId,
+        range: `${USERS_SHEET_TITLE}!A2:K`
+      });
+      const rows = res.data.values || [];
+      return rows.map((row, idx) => ({
+        rowIndex: idx + 2, // 1-indexed, starts after header
+        user: {
+          id: row[0] || '',
+          name: row[1] || '',
+          email: (row[2] || '').trim().toLowerCase(),
+          password_hash: row[3] || '',
+          google_id: row[4] || '',
+          google_refresh_token: row[5] || '',
+          google_calendar_connected: row[6] === 'true',
+          reset_token_hash: row[7] || '',
+          reset_token_expires_at: row[8] || '',
+          created_at: row[9] || '',
+          updated_at: row[10] || ''
+        }
+      }));
+    } catch (err) {
+      console.warn('[UserStorage] Error reading from Google Sheets:', err.message);
+      return null;
+    }
+  }
+
   async findByEmail(email) {
     await this.init();
     const normalized = (email || '').trim().toLowerCase();
     if (!normalized) return null;
 
-    if (this.isUsingGoogleSheets && this.usersSheet) {
-      try {
-        const rows = await this.usersSheet.getRows();
-        const row = rows.find(r => (r.get('email') || '').trim().toLowerCase() === normalized);
-        return row ? this._rowToUser(row) : null;
-      } catch (err) {
-        console.warn('[UserStorage] Error reading from Google Sheets, checking local fallback:', err.message);
-      }
+    const sheetUsers = await this._getGoogleSheetUsers();
+    if (sheetUsers) {
+      const match = sheetUsers.find(item => item.user.email === normalized);
+      return match ? match.user : null;
     }
 
     const users = readLocalUsers();
     return users.find(u => (u.email || '').toLowerCase() === normalized) || null;
   }
 
-  // Find user by unique ID
   async findById(id) {
     await this.init();
     if (!id) return null;
 
-    if (this.isUsingGoogleSheets && this.usersSheet) {
-      try {
-        const rows = await this.usersSheet.getRows();
-        const row = rows.find(r => r.get('id') === id);
-        return row ? this._rowToUser(row) : null;
-      } catch (err) {
-        console.warn('[UserStorage] Error reading from Google Sheets:', err.message);
-      }
+    const sheetUsers = await this._getGoogleSheetUsers();
+    if (sheetUsers) {
+      const match = sheetUsers.find(item => item.user.id === id);
+      return match ? match.user : null;
     }
 
     const users = readLocalUsers();
     return users.find(u => u.id === id) || null;
   }
 
-  // Find user by reset token hash
   async findByResetTokenHash(tokenHash) {
     await this.init();
     if (!tokenHash) return null;
 
-    if (this.isUsingGoogleSheets && this.usersSheet) {
-      try {
-        const rows = await this.usersSheet.getRows();
-        const row = rows.find(r => r.get('reset_token_hash') === tokenHash);
-        return row ? this._rowToUser(row) : null;
-      } catch (err) {
-        console.warn('[UserStorage] Error reading reset token from Google Sheets:', err.message);
-      }
+    const sheetUsers = await this._getGoogleSheetUsers();
+    if (sheetUsers) {
+      const match = sheetUsers.find(item => item.user.reset_token_hash === tokenHash);
+      return match ? match.user : null;
     }
 
     const users = readLocalUsers();
     return users.find(u => u.reset_token_hash === tokenHash) || null;
   }
 
-  // Create new user
   async createUser(userData) {
     await this.init();
     const now = new Date().toISOString();
@@ -190,12 +234,32 @@ class UserStorage {
       updated_at: userData.updated_at || now
     };
 
-    if (this.isUsingGoogleSheets && this.usersSheet) {
+    if (this.isUsingGoogleSheets && this.sheetsClient) {
       try {
-        await this.usersSheet.addRow(record);
+        const rowValues = [
+          record.id,
+          record.name,
+          record.email,
+          record.password_hash,
+          record.google_id,
+          record.google_refresh_token,
+          record.google_calendar_connected,
+          record.reset_token_hash,
+          record.reset_token_expires_at,
+          record.created_at,
+          record.updated_at
+        ];
+
+        await this.sheetsClient.spreadsheets.values.append({
+          spreadsheetId: this.spreadsheetId,
+          range: `${USERS_SHEET_TITLE}!A:K`,
+          valueInputOption: 'USER_ENTERED',
+          insertDataOption: 'INSERT_ROWS',
+          requestBody: { values: [rowValues] }
+        });
         return record;
       } catch (err) {
-        console.error('[UserStorage] Failed to add user to Google Sheets:', err.message);
+        console.error('[UserStorage] Failed to append user to Google Sheets:', err.message);
       }
     }
 
@@ -206,7 +270,6 @@ class UserStorage {
     return record;
   }
 
-  // Update existing user fields
   async updateUser(id, updates) {
     await this.init();
     const now = new Date().toISOString();
@@ -215,18 +278,33 @@ class UserStorage {
       updated_at: now
     };
 
-    if (this.isUsingGoogleSheets && this.usersSheet) {
+    if (this.isUsingGoogleSheets && this.sheetsClient) {
       try {
-        const rows = await this.usersSheet.getRows();
-        const row = rows.find(r => r.get('id') === id);
-        if (row) {
-          Object.keys(safeUpdates).forEach(key => {
-            if (USER_COLUMNS.includes(key)) {
-              row.set(key, safeUpdates[key] === null ? '' : String(safeUpdates[key]));
-            }
+        const sheetUsers = await this._getGoogleSheetUsers();
+        const match = sheetUsers?.find(item => item.user.id === id);
+        if (match) {
+          const merged = { ...match.user, ...safeUpdates };
+          const rowValues = [
+            merged.id,
+            merged.name,
+            merged.email,
+            merged.password_hash,
+            merged.google_id,
+            merged.google_refresh_token,
+            merged.google_calendar_connected ? 'true' : 'false',
+            merged.reset_token_hash,
+            merged.reset_token_expires_at,
+            merged.created_at,
+            merged.updated_at
+          ];
+
+          await this.sheetsClient.spreadsheets.values.update({
+            spreadsheetId: this.spreadsheetId,
+            range: `${USERS_SHEET_TITLE}!A${match.rowIndex}:K${match.rowIndex}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [rowValues] }
           });
-          await row.save();
-          return this._rowToUser(row);
+          return merged;
         }
       } catch (err) {
         console.error('[UserStorage] Failed to update user in Google Sheets:', err.message);
@@ -245,22 +323,6 @@ class UserStorage {
       return users[index];
     }
     return null;
-  }
-
-  _rowToUser(row) {
-    return {
-      id: row.get('id') || '',
-      name: row.get('name') || '',
-      email: (row.get('email') || '').trim().toLowerCase(),
-      password_hash: row.get('password_hash') || '',
-      google_id: row.get('google_id') || '',
-      google_refresh_token: row.get('google_refresh_token') || '',
-      google_calendar_connected: row.get('google_calendar_connected') === 'true',
-      reset_token_hash: row.get('reset_token_hash') || '',
-      reset_token_expires_at: row.get('reset_token_expires_at') || '',
-      created_at: row.get('created_at') || '',
-      updated_at: row.get('updated_at') || ''
-    };
   }
 }
 
