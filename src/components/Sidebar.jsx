@@ -99,46 +99,97 @@ export default function Sidebar({
         </nav>
 
         {/* Spacer */}
-        <div style={{ flex: 1, minHeight: '12px' }} />
+        <div style={{ flex: 1, minHeight: '16px' }} />
 
         {/* Sidebar Footer */}
         <div className="sidebar-footer">
-          {/* User Profile / Auth */}
+          {/* User Profile Card / Auth Action */}
           {!currentUser ? (
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              style={{ width: '100%', marginBottom: '10px' }}
-              onClick={() => {
-                onOpenAuthModal('login');
-                onClose();
-              }}
-            >
-              <span>🔑 Sign In / Register</span>
-            </button>
-          ) : (
-            <div className="footer-user-row">
-              <div
-                className="user-pill"
+            <div className="sidebar-auth-prompt">
+              <button
+                type="button"
+                className="btn btn-primary btn-sm sidebar-auth-btn"
                 onClick={() => {
-                  onOpenSettings();
+                  onOpenAuthModal('login');
                   onClose();
                 }}
-                title={`Signed in as ${currentUser.email}. Click to connect accounts & manage settings.`}
               >
-                <div className="user-avatar">
-                  {(currentUser.name || 'U').charAt(0).toUpperCase()}
-                </div>
-                <div className="user-details">
-                  <span className="user-name-display">{currentUser.name}</span>
-                  <span className="user-edit-hint">{currentUser.email}</span>
-                </div>
+                <span>🔑 Sign In / Register</span>
+              </button>
+            </div>
+          ) : (
+            <div
+              className="sidebar-user-card"
+              onClick={() => {
+                onOpenSettings();
+                onClose();
+              }}
+              title={`Signed in as ${currentUser.email}. Click to connect accounts & manage settings.`}
+            >
+              <div className="user-avatar">
+                {(currentUser.name || 'U').charAt(0).toUpperCase()}
               </div>
+              <div className="user-details">
+                <span className="user-name-display">{currentUser.name}</span>
+                <span className="user-edit-hint">{currentUser.email}</span>
+              </div>
+              <div className="user-card-action" title="Settings & Integrations">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </div>
+            </div>
+          )}
 
-              <div className="footer-quick-tools">
+          {/* Bottom Controls Bar: Theme Swatches + Utility Tools */}
+          <div className="sidebar-bottom-controls">
+            <div className="palette-picker-wrap">
+              <span className="palette-label">Theme</span>
+              <div className="palette-picker">
+                {[
+                  { id: 'indigo', title: 'Obsidian Indigo', cls: 'theme-indigo' },
+                  { id: 'emerald', title: 'Emerald Forest', cls: 'theme-emerald' },
+                  { id: 'cyan', title: 'Midnight Cyan', cls: 'theme-cyan' },
+                  { id: 'light', title: 'Studio Light', cls: 'theme-light' }
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`palette-btn ${p.cls} ${currentPalette === p.id ? 'active' : ''}`}
+                    onClick={() => onChangePalette(p.id)}
+                    title={p.title}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="sidebar-utility-tools">
+              <button
+                type="button"
+                className={`tool-icon-btn ${soundEnabled ? 'active' : ''}`}
+                onClick={onToggleSound}
+                title={soundEnabled ? 'Mute Sound FX' : 'Enable 10s Bell Chime'}
+                aria-label="Toggle Sound"
+              >
+                {soundEnabled ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </svg>
+                )}
+              </button>
+
+              {currentUser && (
                 <button
                   type="button"
-                  className="tool-icon-btn"
+                  className="tool-icon-btn logout-btn"
                   onClick={() => {
                     onLogout();
                     onClose();
@@ -146,67 +197,26 @@ export default function Sidebar({
                   title="Sign Out"
                   aria-label="Sign Out"
                 >
-                  🚪
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
                 </button>
-                <button
-                  type="button"
-                  className="tool-icon-btn"
-                  onClick={onToggleSound}
-                  title={soundEnabled ? 'Mute Sound FX' : 'Enable 10s Bell Chime'}
-                >
-                  {soundEnabled ? '🔊' : '🔇'}
-                </button>
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* Sound toggle for logged-out users */}
-          {!currentUser && (
-            <div className="footer-quick-tools" style={{ justifyContent: 'center', marginBottom: '8px' }}>
               <button
                 type="button"
-                className="tool-icon-btn"
-                onClick={onToggleSound}
-                title={soundEnabled ? 'Mute Sound FX' : 'Enable 10s Bell Chime'}
+                className="tool-icon-btn collapse-btn"
+                onClick={onToggleCollapse}
+                title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                aria-label="Toggle Sidebar Collapse"
               >
-                {soundEnabled ? '🔊' : '🔇'}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points={isCollapsed ? "9 18 15 12 9 6" : "15 18 9 12 15 6"} />
+                </svg>
               </button>
             </div>
-          )}
-
-          {/* Theme Palette Swatches */}
-          <div className="palette-picker-row">
-            <span>Theme</span>
-            <div className="palette-picker">
-              {[
-                { id: 'indigo', title: 'Obsidian Indigo', cls: 'theme-indigo' },
-                { id: 'emerald', title: 'Emerald Forest', cls: 'theme-emerald' },
-                { id: 'cyan', title: 'Midnight Cyan', cls: 'theme-cyan' },
-                { id: 'light', title: 'Studio Light', cls: 'theme-light' }
-              ].map(p => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={`palette-btn ${p.cls} ${currentPalette === p.id ? 'active' : ''}`}
-                  onClick={() => onChangePalette(p.id)}
-                  title={p.title}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Collapse Toggle */}
-          <div className="sidebar-collapse-wrap">
-            <button
-              type="button"
-              className="sidebar-collapse-btn"
-              onClick={onToggleCollapse}
-              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
           </div>
         </div>
       </aside>
