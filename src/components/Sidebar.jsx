@@ -217,6 +217,14 @@ export default function Sidebar({
                 </svg>
               </button>
             </div>
+
+            {!isCollapsed && (
+              <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '10.5px', color: 'var(--text-tertiary, #64748b)' }}>
+                <a href="/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</a>
+                <span>•</span>
+                <a href="/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</a>
+              </div>
+            )}
           </div>
         </div>
       </aside>

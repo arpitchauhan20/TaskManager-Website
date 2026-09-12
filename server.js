@@ -120,6 +120,18 @@ app.get('/manifest.json', (req, res) => {
   return res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
+app.get(['/privacy', '/privacy.html'], (req, res) => {
+  const pDist = path.join(DIST_DIR, 'privacy.html');
+  if (fs.existsSync(pDist)) return res.sendFile(pDist);
+  return res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
+
+app.get(['/terms', '/terms.html'], (req, res) => {
+  const tDist = path.join(DIST_DIR, 'terms.html');
+  if (fs.existsSync(tDist)) return res.sendFile(tDist);
+  return res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+
 // Mount Resend HTTPS API endpoints (Port 443 — bypasses ISP blocks)
 app.post('/api/send-email', sendEmailHandler);
 app.post('/api/test-email', sendEmailHandler);
