@@ -160,7 +160,14 @@ export default function App() {
         window.history.replaceState({}, document.title, window.location.pathname);
       } else if (params.get('calendar_error')) {
         const err = params.get('calendar_error');
-        showToast('error', '⚠️', err === 'denied' ? 'Google Calendar access was denied.' : 'Google Calendar connection failed.');
+        if (err === 'login_required') {
+          handleOpenAuthModal('login');
+          showToast('info', '🔒', 'Please sign in or create an account before connecting Google Calendar.');
+        } else if (err === 'denied') {
+          showToast('error', '⚠️', 'Google Calendar access was cancelled or denied.');
+        } else {
+          showToast('error', '⚠️', 'Google Calendar connection failed. Please try again.');
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }

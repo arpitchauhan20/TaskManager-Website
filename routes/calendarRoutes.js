@@ -41,10 +41,7 @@ router.get(['/auth/google', '/api/calendar/auth'], async (req, res) => {
     const user = await resolveUserFromRequest(req);
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required. Please log into TaskFlow Pro before connecting Google Calendar.'
-      });
+      return res.redirect('/?calendar_error=login_required');
     }
 
     // Embed signed userId in state token to prevent CSRF and correlate callback

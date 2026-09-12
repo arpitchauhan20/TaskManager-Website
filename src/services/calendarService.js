@@ -69,7 +69,14 @@ export async function fetchCalendarStatus() {
  */
 export function startGoogleOAuth() {
   if (typeof window !== 'undefined') {
-    window.location.href = '/auth/google';
+    let url = '/auth/google';
+    try {
+      const token = localStorage.getItem('taskflow_auth_token');
+      if (token) {
+        url += `?token=${encodeURIComponent(token)}`;
+      }
+    } catch {}
+    window.location.href = url;
   }
 }
 
