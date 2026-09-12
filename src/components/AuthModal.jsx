@@ -71,6 +71,9 @@ export default function AuthModal({
     setMode(initialMode);
     setErrorMessage('');
     setInfoMessage('');
+    setPassword('');
+    setConfirmPassword('');
+    setCurrentPassword('');
     if (resetToken) {
       setTokenInput(resetToken);
       setMode('reset');
@@ -273,7 +276,19 @@ export default function AuthModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
+          {/* Hidden username context to prevent browser from autofilling saved password into change/reset fields */}
+          <input
+            type="email"
+            name="username_dummy"
+            value={currentUser?.email || email || ''}
+            readOnly
+            style={{ display: 'none' }}
+            autoComplete="username"
+            tabIndex="-1"
+            aria-hidden="true"
+          />
+
           {/* Register: Name */}
           {mode === 'register' && (
             <div className="form-group">
@@ -282,6 +297,7 @@ export default function AuthModal({
               </label>
               <input
                 id="auth-name-input"
+                name="name"
                 className="form-input"
                 type="text"
                 placeholder="e.g. John Doe"
@@ -302,12 +318,14 @@ export default function AuthModal({
               </label>
               <input
                 id="auth-email-input"
+                name="email"
                 className="form-input"
                 type="email"
                 placeholder="e.g. john@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                autoComplete="email"
                 autoFocus={mode !== 'register'}
               />
             </div>
@@ -322,6 +340,7 @@ export default function AuthModal({
               <div style={passwordInputWrapperStyle}>
                 <input
                   id="auth-current-pw"
+                  name="currentPassword"
                   className="form-input"
                   type={showCurrentPassword ? 'text' : 'password'}
                   placeholder="Enter current password"
@@ -329,6 +348,7 @@ export default function AuthModal({
                   onChange={e => setCurrentPassword(e.target.value)}
                   required
                   autoFocus
+                  autoComplete="current-password"
                   style={{ paddingRight: '40px' }}
                 />
                 <button
@@ -357,13 +377,13 @@ export default function AuthModal({
                     type="button"
                     onClick={() => handleSwitchMode('forgot')}
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--accent-light, #818cf8)',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      padding: 0
-                    }}
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--accent-light, #818cf8)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
                   >
                     Forgot password?
                   </button>
@@ -372,12 +392,14 @@ export default function AuthModal({
               <div style={passwordInputWrapperStyle}>
                 <input
                   id="auth-password-input"
+                  name={mode === 'change-password' || mode === 'reset' ? 'newPassword' : 'password'}
                   className="form-input"
                   type={showPassword ? 'text' : 'password'}
                   placeholder={mode === 'register' || mode === 'reset' || mode === 'change-password' ? 'Min 8 characters (letters & numbers)' : 'Enter password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
+                  autoComplete={mode === 'change-password' || mode === 'reset' || mode === 'register' ? 'new-password' : 'current-password'}
                   style={{ paddingRight: '40px' }}
                 />
                 <button
@@ -403,12 +425,14 @@ export default function AuthModal({
               <div style={passwordInputWrapperStyle}>
                 <input
                   id="auth-confirm-pw"
+                  name="confirmPassword"
                   className="form-input"
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   required
+                  autoComplete="new-password"
                   style={{ paddingRight: '40px' }}
                 />
                 <button

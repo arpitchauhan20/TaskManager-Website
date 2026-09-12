@@ -55,12 +55,25 @@ function writeLocalUsers(users) {
   }
 }
 
+function cleanPrivateKey(rawKey) {
+  if (!rawKey || typeof rawKey !== 'string') return '';
+  let key = rawKey.trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1).trim();
+  }
+  key = key.replace(/\\n/g, '\n');
+  key = key.replace(/\r\n/g, '\n');
+  key = key.replace(/^["']+|["']+$/g, '').trim();
+  return key;
+}
+
 class UserStorage {
   constructor() {
     this.sheetsClient = null;
     this.spreadsheetId = null;
     this.isUsingGoogleSheets = false;
     this.initPromise = null;
+    this.lastInitError = null;
   }
 
   async init() {
@@ -75,14 +88,18 @@ class UserStorage {
     const rawPrivateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
 
     if (!spreadsheetId || !clientEmail || !rawPrivateKey) {
-      console.log('[UserStorage] Google Sheets credentials not fully set in .env. Using secure local file fallback.');
+      const missing = [];
+      if (!spreadsheetId) missing.push('GOOGLE_SHEETS_SPREADSHEET_ID');
+      if (!clientEmail) missing.push('GOOGLE_SHEETS_CLIENT_EMAIL');
+      if (!rawPrivateKey) missing.push('GOOGLE_SHEETS_PRIVATE_KEY');
+      this.lastInitError = `Missing environment variables: ${missing.join(', ')}`;
+      console.log(`[UserStorage] Google Sheets credentials missing (${this.lastInitError}). Using local storage fallback.`);
       this.isUsingGoogleSheets = false;
       return;
     }
 
     try {
-      let privateKey = (rawPrivateKey || '').trim().replace(/^["'`]+|["'`]+$/g, '');
-      privateKey = privateKey.replace(/\\n/g, '\n');
+      const privateKey = cleanPrivateKey(rawPrivateKey);
       const auth = new JWT({
         email: clientEmail.trim().replace(/^["'`]+|["'`]+$/g, ''),
         key: privateKey,
@@ -136,8 +153,10 @@ class UserStorage {
       }
 
       this.isUsingGoogleSheets = true;
+      this.lastInitError = null;
       console.log(`[UserStorage] Connected to Google Sheets via official SDK. Users stored in '${USERS_SHEET_TITLE}'.`);
     } catch (err) {
+      this.lastInitError = err.message;
       console.warn('[UserStorage] Google Sheets connection failed:', err.message);
       console.warn('[UserStorage] Falling back to local data storage.');
       this.isUsingGoogleSheets = false;

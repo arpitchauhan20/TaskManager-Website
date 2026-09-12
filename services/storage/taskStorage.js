@@ -57,12 +57,25 @@ function writeLocalTasks(tasks) {
   }
 }
 
+function cleanPrivateKey(rawKey) {
+  if (!rawKey || typeof rawKey !== 'string') return '';
+  let key = rawKey.trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1).trim();
+  }
+  key = key.replace(/\\n/g, '\n');
+  key = key.replace(/\r\n/g, '\n');
+  key = key.replace(/^["']+|["']+$/g, '').trim();
+  return key;
+}
+
 class TaskStorage {
   constructor() {
     this.sheetsClient = null;
     this.spreadsheetId = null;
     this.isUsingGoogleSheets = false;
     this.initPromise = null;
+    this.lastInitError = null;
   }
 
   async init() {
@@ -77,14 +90,18 @@ class TaskStorage {
     const rawPrivateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
 
     if (!spreadsheetId || !clientEmail || !rawPrivateKey) {
-      console.log('[TaskStorage] Google Sheets credentials not configured. Using local JSON storage fallback.');
+      const missing = [];
+      if (!spreadsheetId) missing.push('GOOGLE_SHEETS_SPREADSHEET_ID');
+      if (!clientEmail) missing.push('GOOGLE_SHEETS_CLIENT_EMAIL');
+      if (!rawPrivateKey) missing.push('GOOGLE_SHEETS_PRIVATE_KEY');
+      this.lastInitError = `Missing environment variables: ${missing.join(', ')}`;
+      console.log(`[TaskStorage] Google Sheets credentials missing (${this.lastInitError}). Using local storage fallback.`);
       this.isUsingGoogleSheets = false;
       return;
     }
 
     try {
-      let privateKey = (rawPrivateKey || '').trim().replace(/^["'`]+|["'`]+$/g, '');
-      privateKey = privateKey.replace(/\\n/g, '\n');
+      const privateKey = cleanPrivateKey(rawPrivateKey);
       const auth = new JWT({
         email: clientEmail.trim().replace(/^["'`]+|["'`]+$/g, ''),
         key: privateKey,
@@ -136,8 +153,10 @@ class TaskStorage {
       }
 
       this.isUsingGoogleSheets = true;
+      this.lastInitError = null;
       console.log(`[TaskStorage] Connected to Google Sheets. Tasks stored in '${TASKS_SHEET_TITLE}'.`);
     } catch (err) {
+      this.lastInitError = err.message;
       console.warn('[TaskStorage] Google Sheets connection failed:', err.message);
       this.isUsingGoogleSheets = false;
     }

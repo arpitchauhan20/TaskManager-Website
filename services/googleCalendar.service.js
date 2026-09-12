@@ -66,20 +66,33 @@ class GoogleCalendarService {
     return (process.env.GOOGLE_CLIENT_SECRET || '').trim();
   }
 
-  getRedirectUri() {
+  getRedirectUri(req = null) {
     const raw = process.env.GOOGLE_REDIRECT_URI;
     if (raw && raw.trim()) return raw.trim();
-    const appUrl = (process.env.APP_URL || 'http://localhost:8080').replace(/\/$/, '');
-    return `${appUrl}/auth/google/callback`;
+    const appUrl = process.env.APP_URL;
+    if (appUrl && appUrl.trim()) {
+      return `${appUrl.trim().replace(/\/$/, '')}/auth/google/callback`;
+    }
+    if (req) {
+      const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers['host'];
+      if (host) {
+        return `${proto}://${host}/auth/google/callback`;
+      }
+    }
+    if (process.env.VERCEL_URL) {
+      return `https://${process.env.VERCEL_URL}/auth/google/callback`;
+    }
+    return 'http://localhost:8080/auth/google/callback';
   }
 
   /**
    * Creates configured OAuth2 client instance using official googleapis
    */
-  getOAuth2Client() {
+  getOAuth2Client(req = null) {
     const clientId = this.getClientId();
     const clientSecret = this.getClientSecret();
-    const redirectUri = this.getRedirectUri();
+    const redirectUri = this.getRedirectUri(req);
 
     if (!clientId || !clientSecret) {
       console.warn('[GoogleCalendarService] Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET.');
@@ -96,8 +109,8 @@ class GoogleCalendarService {
    * Generates authorization URL requesting minimum required Calendar scope
    * and offline access for refresh token.
    */
-  generateAuthUrl(state = '') {
-    const oauth2Client = this.getOAuth2Client();
+  generateAuthUrl(state = '', req = null) {
+    const oauth2Client = this.getOAuth2Client(req);
 
     const scopes = [
       'https://www.googleapis.com/auth/calendar.events',
@@ -117,8 +130,8 @@ class GoogleCalendarService {
    * Exchanges authorization code for Google OAuth tokens
    * and identifies the Google account.
    */
-  async exchangeCode(code) {
-    const oauth2Client = this.getOAuth2Client();
+  async exchangeCode(code, req = null) {
+    const oauth2Client = this.getOAuth2Client(req);
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 

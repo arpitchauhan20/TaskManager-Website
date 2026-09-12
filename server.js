@@ -61,6 +61,35 @@ app.use('/api/tasks', taskRoutes);
 // Mount Google Calendar OAuth & API Endpoints
 app.use('/', calendarRoutes);
 
+const userStorage = require('./services/storage/userStorage');
+const taskStorage = require('./services/storage/taskStorage');
+const googleCalendarService = require('./services/googleCalendar.service');
+
+// Health check & diagnostic endpoint
+app.get(['/api/health', '/health'], async (req, res) => {
+  try {
+    await userStorage.init();
+    await taskStorage.init();
+  } catch (e) {}
+
+  res.status(200).json({
+    status: 'ok',
+    time: new Date().toISOString(),
+    storage: {
+      usingGoogleSheets: Boolean(userStorage.isUsingGoogleSheets),
+      sheetsError: userStorage.lastInitError || taskStorage.lastInitError || null,
+      hasSpreadsheetId: Boolean(process.env.GOOGLE_SHEETS_SPREADSHEET_ID),
+      hasClientEmail: Boolean(process.env.GOOGLE_SHEETS_CLIENT_EMAIL),
+      hasPrivateKey: Boolean(process.env.GOOGLE_SHEETS_PRIVATE_KEY)
+    },
+    calendarOAuth: {
+      hasClientId: Boolean(process.env.GOOGLE_CLIENT_ID),
+      hasClientSecret: Boolean(process.env.GOOGLE_CLIENT_SECRET),
+      activeRedirectUri: googleCalendarService.getRedirectUri(req)
+    }
+  });
+});
+
 // Explicit Service Worker & PWA Manifest Routes (Must serve with correct headers)
 const DIST_DIR = path.join(__dirname, 'dist');
 

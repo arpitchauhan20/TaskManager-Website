@@ -51,7 +51,7 @@ router.get(['/auth/google', '/api/calendar/auth'], async (req, res) => {
       { expiresIn: '15m' }
     );
 
-    const authUrl = googleCalendarService.generateAuthUrl(state);
+    const authUrl = googleCalendarService.generateAuthUrl(state, req);
     return res.redirect(authUrl);
   } catch (err) {
     console.error('[CalendarRoutes] Error initiating Google OAuth:', err);
@@ -106,7 +106,7 @@ router.get(['/auth/google/callback', '/api/calendar/callback'], async (req, res)
     }
 
     // 2. Exchange authorization code for Google credentials
-    const { tokens, googleId, email } = await googleCalendarService.exchangeCode(code);
+    const { tokens, googleId, email } = await googleCalendarService.exchangeCode(code, req);
 
     // 3. Store required authorization information securely
     const updates = {
