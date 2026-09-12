@@ -800,17 +800,7 @@ export default function App() {
             }}
           />
 
-          {/* Google Calendar Connection Section */}
-          <CalendarConnectionCard
-            isConnected={isCalendarConnected}
-            isLoading={isCalendarLoading}
-            currentUser={currentUser}
-            onConnect={handleConnectCalendar}
-            onDisconnect={handleDisconnectCalendar}
-            onOpenAuthModal={handleOpenAuthModal}
-          />
-
-          {/* Direct Google Calendar Reminder Section */}
+          {/* Direct Google Calendar Reminder Card (Compact, Click-to-Open) */}
           <CalendarReminderCard
             isCalendarConnected={isCalendarConnected}
             isCalendarLoading={isCalendarLoading}
@@ -821,7 +811,7 @@ export default function App() {
             onShowToast={showToast}
           />
 
-          {/* Tasks Grid Feed */}
+          {/* Task Details & Workspace Card (Compact, Click-to-Open) */}
           <TaskList
             tasks={filteredTasks}
             onToggleComplete={handleToggleComplete}
@@ -869,6 +859,9 @@ export default function App() {
         isCalendarLoading={isCalendarLoading}
         onConnectCalendar={handleConnectCalendar}
         onDisconnectCalendar={handleDisconnectCalendar}
+        currentUser={currentUser}
+        onOpenAuthModal={handleOpenAuthModal}
+        onLogout={handleLogout}
       />
 
       <AuthModal

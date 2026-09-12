@@ -121,10 +121,10 @@ export default function Sidebar({
               <div
                 className="user-pill"
                 onClick={() => {
-                  onOpenAuthModal('change-password');
+                  onOpenSettings();
                   onClose();
                 }}
-                title={`Signed in as ${currentUser.email}. Click to manage password.`}
+                title={`Signed in as ${currentUser.email}. Click to connect accounts & manage settings.`}
               >
                 <div className="user-avatar">
                   {(currentUser.name || 'U').charAt(0).toUpperCase()}
