@@ -81,9 +81,10 @@ class UserStorage {
     }
 
     try {
-      const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
+      let privateKey = (rawPrivateKey || '').trim().replace(/^["'`]+|["'`]+$/g, '');
+      privateKey = privateKey.replace(/\\n/g, '\n');
       const auth = new JWT({
-        email: clientEmail,
+        email: clientEmail.trim().replace(/^["'`]+|["'`]+$/g, ''),
         key: privateKey,
         scopes: ['https://www.googleapis.com/auth/spreadsheets']
       });

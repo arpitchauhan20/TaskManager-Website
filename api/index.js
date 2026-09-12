@@ -13,6 +13,7 @@ try {
   const cookieParser = require('cookie-parser');
   const authRoutes = require('../routes/authRoutes');
   const calendarRoutes = require('../routes/calendarRoutes');
+  const taskRoutes = require('../routes/taskRoutes');
   const sendEmailHandler = require('../services/sendEmailHandler');
   const calendarFeedHandler = require('../services/calendarFeedHandler');
 
@@ -38,6 +39,9 @@ try {
 
   // Mount Authentication System Endpoints
   app.use(['/api/auth', '/auth'], authRoutes);
+
+  // Mount Authenticated Tasks REST API
+  app.use(['/api/tasks', '/tasks'], taskRoutes);
 
   // Mount Google Calendar OAuth & API Endpoints
   app.use(['/api/calendar', '/calendar'], calendarRoutes);

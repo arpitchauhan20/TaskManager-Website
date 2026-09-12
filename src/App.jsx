@@ -14,6 +14,7 @@ import CalendarReminderCard from './components/CalendarReminderCard';
 import ToastContainer from './components/ToastContainer';
 import { SoundFX } from './services/soundEngine';
 import { AuthClient } from './services/authClient';
+import { TaskClient } from './services/taskClient';
 import {
   openGoogleCalendar,
   downloadICS,
@@ -100,10 +101,34 @@ export default function App() {
     }
   }, []);
 
+  // Sync tasks from server / Google Sheets whenever authenticated user changes
+  useEffect(() => {
+    if (currentUser) {
+      TaskClient.getTasks().then(serverTasks => {
+        if (Array.isArray(serverTasks) && serverTasks.length > 0) {
+          setTasks(serverTasks);
+        } else if (tasks.length > 0) {
+          TaskClient.syncTasks(tasks).then(synced => {
+            if (synced && synced.length > 0) setTasks(synced);
+          });
+        }
+      });
+    }
+  }, [currentUser]);
+
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
     if (user.name) setUserName(user.name);
     if (user.email) setReminderEmail(user.email);
+    TaskClient.getTasks().then(serverTasks => {
+      if (Array.isArray(serverTasks) && serverTasks.length > 0) {
+        setTasks(serverTasks);
+      } else if (tasks.length > 0) {
+        TaskClient.syncTasks(tasks).then(synced => {
+          if (synced && synced.length > 0) setTasks(synced);
+        });
+      }
+    });
   };
 
   const handleLogout = async () => {
@@ -511,6 +536,10 @@ export default function App() {
     setTasks(prev => [newTask, ...prev]);
     showToast('success', '✨', `"${title}" added`);
 
+    if (currentUser) {
+      TaskClient.createTask(newTask);
+    }
+
     scheduleBackendReminder(newTask, {
       subscription: pushSub,
       defaultEmail: reminderEmail
@@ -544,6 +573,14 @@ export default function App() {
       };
       setTasks(prev => [savedTask, ...prev]);
       showToast('success', '✨', `"${taskData.title}" saved`);
+    }
+
+    if (currentUser) {
+      if (taskToEdit) {
+        TaskClient.updateTask(savedTask.id, savedTask);
+      } else {
+        TaskClient.createTask(savedTask);
+      }
     }
 
     // 1. Sync persistent background reminder to server (fires when scheduled time arrives)
@@ -629,6 +666,10 @@ export default function App() {
         return t;
       })
     );
+
+    if (currentUser) {
+      TaskClient.updateTask(id, { completed: !tasks.find(t => t.id === id)?.completed });
+    }
   };
 
   const handleDeleteTask = (id) => {
@@ -640,6 +681,9 @@ export default function App() {
       const target = tasks.find(t => t.id === taskToDeleteId);
       cancelBackendReminder(taskToDeleteId);
       setTasks(prev => prev.filter(t => t.id !== taskToDeleteId));
+      if (currentUser) {
+        TaskClient.deleteTask(taskToDeleteId);
+      }
       showToast('error', '🗑️', `"${target?.title || 'Task'}" deleted`);
       setTaskToDeleteId(null);
     }
@@ -709,9 +753,19 @@ export default function App() {
     }
   };
 
-  const handleSaveProfile = ({ name, email }) => {
+  const handleSaveProfile = async ({ name, email }) => {
     if (name) setUserName(name);
     if (email) setReminderEmail(email);
+    if (currentUser && name) {
+      try {
+        const res = await AuthClient.updateProfile({ name });
+        if (res?.user) {
+          setCurrentUser(prev => ({ ...prev, name: res.user.name }));
+        }
+      } catch (err) {
+        console.warn('Profile cloud sync note:', err);
+      }
+    }
   };
 
   return (

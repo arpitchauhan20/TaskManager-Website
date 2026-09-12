@@ -3,7 +3,7 @@
 // Direct OAuth 2.0 Integration via Google Identity Services
 // ==========================================
 
-export const GOOGLE_CLIENT_ID = '859743879600-ooa6qju33lo7lsr4bgjiab0jslcel287.apps.googleusercontent.com';
+export const GOOGLE_CLIENT_ID = '964463438864-v57v0u5tmq1ffek0tk49ce8fpbblnqo1.apps.googleusercontent.com';
 
 /**
  * Checks if a valid, non-expired Google OAuth access token is stored.
@@ -33,6 +33,17 @@ export function getConnectedGoogleEmail() {
   }
 }
 
+function getAuthHeaders(extraHeaders = {}) {
+  const headers = { ...extraHeaders };
+  try {
+    const token = localStorage.getItem('taskflow_auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  } catch {}
+  return headers;
+}
+
 /**
  * Fetches Google Calendar connection status from the backend API (/api/calendar/status)
  */
@@ -40,9 +51,7 @@ export async function fetchCalendarStatus() {
   try {
     const res = await fetch('/api/calendar/status', {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      },
+      headers: getAuthHeaders({ 'Accept': 'application/json' }),
       credentials: 'include'
     });
     if (res.ok) {
@@ -71,9 +80,7 @@ export async function disconnectCalendar() {
   try {
     const res = await fetch('/api/calendar/disconnect', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       credentials: 'include'
     });
     const data = await res.json();
@@ -93,9 +100,7 @@ export async function disconnectCalendar() {
 export async function createCalendarReminder(reminderData) {
   const res = await fetch('/api/calendar/reminders', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     credentials: 'include',
     body: JSON.stringify(reminderData)
   });

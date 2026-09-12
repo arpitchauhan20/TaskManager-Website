@@ -91,6 +91,14 @@ export const AuthClient = {
     }
   },
 
+  // 4.1 Update Profile
+  async updateProfile({ name }) {
+    return request('/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ name })
+    });
+  },
+
   // 5. Change Password
   async changePassword({ currentPassword, newPassword }) {
     return request('/password', {

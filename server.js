@@ -14,6 +14,7 @@ const sendEmailHandler = require('./services/sendEmailHandler');
 const calendarFeedHandler = require('./services/calendarFeedHandler');
 const authRoutes = require('./routes/authRoutes');
 const calendarRoutes = require('./routes/calendarRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -53,6 +54,9 @@ app.use(express.json());
 
 // Mount Authentication System Endpoints
 app.use('/api/auth', authRoutes);
+
+// Mount Authenticated Task Management REST API
+app.use('/api/tasks', taskRoutes);
 
 // Mount Google Calendar OAuth & API Endpoints
 app.use('/', calendarRoutes);

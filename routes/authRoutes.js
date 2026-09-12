@@ -180,6 +180,37 @@ router.get('/me', authMiddleware, (req, res) => {
 });
 
 // -------------------------------------------------------------
+// 4.1 UPDATE PROFILE
+// -------------------------------------------------------------
+router.put('/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name } = req.body || {};
+    const updates = {};
+    if (name && typeof name === 'string') {
+      updates.name = name.trim();
+    }
+
+    const updated = await userStorage.updateUser(req.user.id, updates);
+    if (!updated) {
+      return res.status(404).json({ success: false, error: 'User not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email
+      },
+      message: 'Profile updated successfully.'
+    });
+  } catch (err) {
+    console.error('[Auth API] Update profile error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to update profile.' });
+  }
+});
+
+// -------------------------------------------------------------
 // 5. CHANGE PASSWORD
 // -------------------------------------------------------------
 router.put('/password', authMiddleware, async (req, res) => {
@@ -269,11 +300,10 @@ router.post('/forgot-password', rateLimiter({ max: 8, message: 'Too many reset r
         return null;
       });
 
-      // In development mode, return the reset URL so user can test without email
+      // In development mode, attach the reset URL so developers can test without email
       if (!isProduction && emailResult && emailResult.resetUrl) {
         return res.status(200).json({
           ...genericResponse,
-          message: 'Password reset link generated. Since this is development mode, the link is shown below.',
           resetUrl: emailResult.resetUrl
         });
       }

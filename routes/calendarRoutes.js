@@ -137,9 +137,9 @@ router.get(['/auth/google/callback', '/api/calendar/callback'], async (req, res)
 
 // -------------------------------------------------------------
 // 3. CALENDAR STATUS
-// GET /api/calendar/status
+// GET /api/calendar/status or /status
 // -------------------------------------------------------------
-router.get('/api/calendar/status', async (req, res) => {
+router.get(['/api/calendar/status', '/status'], async (req, res) => {
   try {
     const user = await resolveUserFromRequest(req);
 
@@ -176,9 +176,9 @@ router.get('/api/calendar/status', async (req, res) => {
 
 // -------------------------------------------------------------
 // 4. DISCONNECT CALENDAR
-// POST /api/calendar/disconnect
+// POST /api/calendar/disconnect or /disconnect
 // -------------------------------------------------------------
-router.post('/api/calendar/disconnect', authMiddleware, async (req, res) => {
+router.post(['/api/calendar/disconnect', '/disconnect'], authMiddleware, async (req, res) => {
   try {
     const user = await userStorage.findById(req.user.id);
 
@@ -204,7 +204,7 @@ router.post('/api/calendar/disconnect', authMiddleware, async (req, res) => {
 
 // -------------------------------------------------------------
 // 5. CREATE GOOGLE CALENDAR REMINDER EVENT
-// POST /api/calendar/reminders
+// POST /api/calendar/reminders or /reminders
 // -------------------------------------------------------------
 function isValidTimeZone(tz) {
   if (!tz || typeof tz !== 'string') return false;
@@ -216,7 +216,7 @@ function isValidTimeZone(tz) {
   }
 }
 
-router.post('/api/calendar/reminders', authMiddleware, async (req, res) => {
+router.post(['/api/calendar/reminders', '/reminders'], authMiddleware, async (req, res) => {
   try {
     const user = await userStorage.findById(req.user.id);
 
