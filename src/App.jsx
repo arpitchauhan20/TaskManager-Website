@@ -164,9 +164,14 @@ export default function App() {
           handleOpenAuthModal('login');
           showToast('info', '🔒', 'Please sign in or create an account before connecting Google Calendar.');
         } else if (err === 'denied') {
-          showToast('error', '⚠️', 'Google Calendar access was cancelled or denied.');
+          showToast('error', '⚠️', 'Google Calendar access was denied. In Testing mode, please ensure your email is added under "Test users" in Google Cloud Console.');
+        } else if (err === 'exchange_failed') {
+          showToast('error', '⚠️', 'OAuth exchange failed. Please check Authorized redirect URIs in Google Cloud Console.');
+        } else if (err === 'user_not_found' || err === 'unauthorized') {
+          handleOpenAuthModal('login');
+          showToast('info', '🔒', 'Session expired. Please sign in to link Google Calendar.');
         } else {
-          showToast('error', '⚠️', 'Google Calendar connection failed. Please try again.');
+          showToast('error', '⚠️', `Google Calendar connection failed (${err}). Please try again.`);
         }
         window.history.replaceState({}, document.title, window.location.pathname);
       }
