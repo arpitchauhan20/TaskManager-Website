@@ -72,7 +72,7 @@ export default function SettingsModal({
     }
 
     setIsSendingFriendInvite(true);
-    if (onShowToast) onShowToast('info', '⏳', `Sending Google OAuth invite request to Arpit...`);
+    if (onShowToast) onShowToast('info', '⏳', 'Sending Google OAuth access request...');
 
     const requesterName = name.trim() || userName || 'Executive User';
     const requesterEmail = email.trim() || currentUser?.email || 'Not provided';
@@ -86,7 +86,7 @@ export default function SettingsModal({
 
     setIsSendingFriendInvite(false);
     if (res.success) {
-      if (onShowToast) onShowToast('success', '✨', `Request sent! Arpit will add ${fEmail} to Google OAuth Test Users.`);
+      if (onShowToast) onShowToast('success', '✨', 'Invite request sent! The administrator will add your friend to Google OAuth Test Users.');
       setFriendName('');
       setFriendEmail('');
     } else {
@@ -445,7 +445,7 @@ export default function SettingsModal({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <strong className="settings-card-title">Request Friend Invite / Google OAuth Access</strong>
                     <div className="settings-card-desc">
-                      Fill in your friend's details to automatically dispatch an invite request to <strong style={{ color: 'var(--text-primary, #ffffff)' }}>arpitchauhan5586@gmail.com</strong> for adding to Google OAuth test users.
+                      Fill in your friend's details to automatically dispatch an invite request to the administrator for adding them to Google OAuth test users.
                     </div>
                   </div>
                 </div>
