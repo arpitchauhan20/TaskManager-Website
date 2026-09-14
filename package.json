@@ -1,7 +1,7 @@
 {
-  "name": "tech-tools",
+  "name": "techytool",
   "version": "2.0.0",
-  "description": "Tech Tools — Executive task management, visual scheduling, Google Calendar sync, and automated reminders",
+  "description": "Techy Tool — Executive task management, visual scheduling, Google Calendar sync, and automated reminders",
   "main": "server.js",
   "scripts": {
     "dev": "vite",

@@ -271,7 +271,7 @@ export async function saveEventToGoogleCalendar(task, fallbackEmail = '') {
 
   const eventPayload = {
     summary: `🎯 Deadline: ${task.title}`,
-    description: `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${new Date(remMs).toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Tech Tools: ${typeof window !== 'undefined' ? window.location.origin : 'https://tech-tools.vercel.app'}`,
+    description: `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${new Date(remMs).toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Techy Tool: ${typeof window !== 'undefined' ? window.location.origin : 'https://techytool.vercel.app'}`,
     start: {
       dateTime: deadline.toISOString(),
       timeZone
@@ -369,7 +369,7 @@ export function openGoogleCalendar(task, fallbackEmail = '') {
 
   const title = encodeURIComponent(`🎯 Deadline: ${task.title}`);
   const details = encodeURIComponent(
-    `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${remDate.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Tech Tools: ${typeof window !== 'undefined' ? window.location.origin : 'https://tech-tools.vercel.app'}`
+    `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${remDate.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Techy Tool: ${typeof window !== 'undefined' ? window.location.origin : 'https://techytool.vercel.app'}`
   );
 
   let url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadline)}/${formatGCalDate(end)}&details=${details}`;

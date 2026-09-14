@@ -36,20 +36,20 @@ function generateICSInvite(task, recipientEmail) {
 
   return [
     'BEGIN:VCALENDAR',
-    'PRODID:-//Tech Tools//Deadline Calendar Engine//EN',
+    'PRODID:-//Techy Tool//Deadline Calendar Engine//EN',
     'VERSION:2.0',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
 
     // --- SCHEDULED DEADLINE EVENT WITH EMBEDDED REMINDER ALARM ---
     'BEGIN:VEVENT',
-    `UID:techtools_${taskId}@techtools.pro`,
+    `UID:techytool_${taskId}@techytool.pro`,
     `DTSTAMP:${formatICSDate(now)}`,
     `DTSTART:${formatICSDate(deadlineStart)}`,
     `DTEND:${formatICSDate(deadlineEnd)}`,
     `SUMMARY:🎯 Deadline: ${cleanTitle}`,
-    `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}\\n\\nManaged via Tech Tools`,
-    'ORGANIZER;CN="Tech Tools":mailto:onboarding@resend.dev',
+    `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}\\n\\nManaged via Techy Tool`,
+    'ORGANIZER;CN="Techy Tool":mailto:onboarding@resend.dev',
     `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE;CN="${attendeeEmail}":mailto:${attendeeEmail}`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
@@ -69,14 +69,14 @@ function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd) {
   const formatGCalDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
   const title = encodeURIComponent(`🎯 Deadline: ${task.title || 'Task Reminder'}`);
   const details = encodeURIComponent(
-    `Task: ${task.title || ''}\nDeadline: ${deadlineStart.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Tech Tools`
+    `Task: ${task.title || ''}\nDeadline: ${deadlineStart.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Techy Tool`
   );
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
 }
 
 // Helper: Sanitize & format Resend 'from' address to prevent 422 validation errors
 function resolveFromEmail(raw) {
-  const fallback = 'Tech Tools <onboarding@resend.dev>';
+  const fallback = 'Techy Tool <onboarding@resend.dev>';
   if (!raw || typeof raw !== 'string') return fallback;
 
   let cleaned = raw.trim();
@@ -91,11 +91,11 @@ function resolveFromEmail(raw) {
   if (matchWithAngle) {
     const namePart = matchWithAngle[1].trim();
     const emailPart = matchWithAngle[2].trim();
-    const finalName = namePart ? namePart.replace(/[^\w\s.-]/g, '') : 'Tech Tools';
+    const finalName = namePart ? namePart.replace(/[^\w\s.-]/g, '') : 'Techy Tool';
     return `${finalName} <${emailPart}>`;
   }
 
-  return `Tech Tools <${cleaned}>`;
+  return `Techy Tool <${cleaned}>`;
 }
 
 module.exports = async (req, res) => {
@@ -135,7 +135,7 @@ module.exports = async (req, res) => {
   const resend = new Resend(apiKey);
   const taskObj = {
     taskId: req.body.taskId || 'task_' + Date.now(),
-    title: title || 'Tech Tools Live Test',
+    title: title || 'Techy Tool Live Test',
     description: description || '',
     deadline: deadline || new Date(Date.now() + 3600000).toISOString(),
     priority: priority || 'high',
@@ -161,7 +161,7 @@ module.exports = async (req, res) => {
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; border-radius: 14px; overflow: hidden; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
       <!-- Header -->
       <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 24px 30px;">
-        <h1 style="margin: 0; font-size: 22px; color: #ffffff; font-weight: 700; letter-spacing: -0.02em;">Tech Tools Reminder</h1>
+        <h1 style="margin: 0; font-size: 22px; color: #ffffff; font-weight: 700; letter-spacing: -0.02em;">Techy Tool Reminder</h1>
         <p style="margin: 6px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.85);">Task Reminder & Google Calendar Sync</p>
       </div>
 
@@ -197,7 +197,7 @@ module.exports = async (req, res) => {
 
       <!-- Footer -->
       <div style="background: #090d16; padding: 16px 30px; font-size: 11px; color: #64748b; text-align: center;">
-        Sent automatically by Tech Tools
+        Sent automatically by Techy Tool
       </div>
     </div>
   `;
@@ -206,7 +206,7 @@ module.exports = async (req, res) => {
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: [targetRecipient],
-      subject: isTest ? 'Tech Tools: Live Resend & Google Calendar Test' : `Task Reminder: ${taskObj.title} [Tech Tools]`,
+      subject: isTest ? 'Techy Tool: Live Resend & Google Calendar Test' : `Task Reminder: ${taskObj.title} [Techy Tool]`,
       html,
       attachments: [
         {
