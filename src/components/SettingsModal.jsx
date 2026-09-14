@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { sendTaskEmail } from '../services/emailService';
+import { SoundFX } from '../services/soundEngine';
 import {
   isGoogleCalendarConnected,
   getConnectedGoogleEmail,
@@ -15,7 +16,10 @@ import {
   LinkIcon,
   ZapIcon,
   KeyIcon,
-  LogOutIcon
+  LogOutIcon,
+  VolumeIcon,
+  PlayIcon,
+  CheckIcon
 } from './Icons';
 
 export default function SettingsModal({
@@ -31,7 +35,11 @@ export default function SettingsModal({
   onDisconnectCalendar,
   currentUser,
   onOpenAuthModal,
-  onLogout
+  onLogout,
+  currentPalette = 'indigo',
+  onChangePalette,
+  soundEnabled = true,
+  onToggleSound
 }) {
   const [name, setName] = useState(userName || '');
   const [email, setEmail] = useState(reminderEmail || '');
@@ -67,14 +75,14 @@ export default function SettingsModal({
       name: name.trim(),
       email: email.trim()
     });
-    if (onShowToast) onShowToast('success', 'user', 'Profile and automation settings saved');
+    if (onShowToast) onShowToast('success', 'user', 'Profile and workspace settings saved');
     onClose();
   };
 
   const handleTestEmail = async () => {
     const target = email.trim() || currentUser?.email;
     if (!target) {
-      if (onShowToast) onShowToast('error', 'alert', 'Please enter your email address in the field above before testing.');
+      if (onShowToast) onShowToast('error', 'alert', 'Please enter your email address before testing.');
       return;
     }
 
@@ -108,7 +116,7 @@ export default function SettingsModal({
       await requestGoogleCalendarAccess({ promptConsent: true });
       setGcalConnected(true);
       setGcalEmail(getConnectedGoogleEmail());
-      if (onShowToast) onShowToast('success', 'calendar', 'Google Calendar connected! Tasks will now auto-save directly in the background.');
+      if (onShowToast) onShowToast('success', 'calendar', 'Google Calendar connected! Tasks will auto-sync directly in the background.');
     } catch (err) {
       if (onShowToast) onShowToast('error', 'alert', err.message || 'Failed to authorize Google Calendar');
     } finally {
@@ -154,233 +162,318 @@ export default function SettingsModal({
 
   return (
     <div className="modal-overlay active" id="settings-modal" onClick={e => e.target.id === 'settings-modal' && onClose()}>
-      <div className="modal modal-md settings-modal-box">
-        <div className="modal-handle" />
+      {/* Outer Dialog Wrapper for Floating Outside Close Button */}
+      <div className="modal-dialog-wrapper settings-dialog-wrapper">
+        {/* Floating Outside Close Button */}
+        <button
+          type="button"
+          className="modal-floating-close-btn"
+          onClick={onClose}
+          title="Close (Esc)"
+          aria-label="Close"
+        >
+          <XIcon size={18} />
+        </button>
 
-        <div className="modal-header">
-          <div>
-            <h2 className="modal-title">Account &amp; Connected Services</h2>
-            <p className="modal-subtitle">Connect Google Calendar, Resend Email dispatch &amp; manage your profile</p>
-          </div>
-          <button type="button" className="modal-close-btn" onClick={onClose} title="Close">
-            <XIcon size={18} />
-          </button>
-        </div>
-
-        {/* User Status Bar if Logged In */}
-        {currentUser ? (
-          <div className="settings-user-banner">
-            <div className="settings-user-avatar">
-              {(currentUser.name || 'U').charAt(0).toUpperCase()}
+        {/* Modal Box */}
+        <div className="modal settings-modal-box">
+          <div className="modal-header">
+            <div>
+              <h2 className="modal-title">Account &amp; Workspace Profile</h2>
+              <p className="modal-subtitle">Manage appearance, sound alarms, connected services &amp; preferences</p>
             </div>
-            <div className="settings-user-meta">
-              <span className="settings-user-name">{currentUser.name}</span>
-              <span className="settings-user-email">{currentUser.email}</span>
-            </div>
-            <span className="badge-status-pill active" style={{ marginLeft: 'auto' }}>
-              ✓ Signed In
-            </span>
-          </div>
-        ) : (
-          <div className="settings-user-banner guest">
-            <div className="settings-user-meta">
-              <span className="settings-user-name">Local Guest Session</span>
-              <span className="settings-user-email">Sign in to securely sync tasks across devices</span>
-            </div>
-            {onOpenAuthModal && (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={() => {
-                  onClose();
-                  onOpenAuthModal('login');
-                }}
-                style={{ marginLeft: 'auto' }}
-              >
-                Sign In
-              </button>
-            )}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          {/* Section: Connect With */}
-          <div className="settings-section-divider">
-            <span className="settings-section-heading">CONNECT WITH</span>
           </div>
 
-          {/* 1. Google Calendar Integration Card */}
-          <div className="settings-card-section gcal-card-section">
-            <div className="settings-card-header">
-              <div className="settings-card-icon-wrap cal">
-                <CalendarIcon size={20} />
+          {/* User Status Banner */}
+          {currentUser ? (
+            <div className="settings-user-banner">
+              <div className="settings-user-avatar">
+                {(currentUser.name || 'U').charAt(0).toUpperCase()}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <strong className="settings-card-title">Google Calendar</strong>
-                <div className="settings-card-desc">
-                  {gcalConnected
-                    ? `Connected (${gcalEmail || 'Active Session'}) | 1-click & background auto-sync active`
-                    : 'Connect your Google account to sync scheduled tasks and reminders'}
-                </div>
+              <div className="settings-user-meta">
+                <span className="settings-user-name">{currentUser.name}</span>
+                <span className="settings-user-email">{currentUser.email}</span>
               </div>
-              <span className={`badge-status-pill ${gcalConnected ? 'active' : ''}`}>
-                {gcalConnected ? '✓ Connected' : 'Disconnected'}
+              <span className="badge-status-pill active" style={{ marginLeft: 'auto' }}>
+                ✓ Signed In
               </span>
             </div>
-
-            <div className="btn-group-row" style={{ marginTop: '12px', justifyContent: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
-              {!gcalConnected ? (
+          ) : (
+            <div className="settings-user-banner guest">
+              <div className="settings-user-meta">
+                <span className="settings-user-name">Local Guest Session</span>
+                <span className="settings-user-email">Sign in to securely sync tasks across devices</span>
+              </div>
+              {onOpenAuthModal && (
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
-                  onClick={handleConnectGoogle}
-                  disabled={isConnectingGCal || isCalendarLoading}
+                  onClick={() => {
+                    onClose();
+                    onOpenAuthModal('login');
+                  }}
+                  style={{ marginLeft: 'auto' }}
                 >
-                  <LinkIcon size={14} style={{ marginRight: '4px' }} />
-                  <span>{isConnectingGCal || isCalendarLoading ? 'Connecting...' : 'Connect Google Calendar'}</span>
+                  Sign In
                 </button>
-              ) : (
-                <>
+              )}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            {/* Section: Appearance & Sound */}
+            <div className="settings-section-divider">
+              <span className="settings-section-heading">APPEARANCE &amp; SOUND</span>
+            </div>
+
+            {/* 1. Theme Color Selector Card */}
+            <div className="settings-card-section" style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: '8px' }}>
+                <strong className="settings-card-title">Color Theme</strong>
+                <div className="settings-card-desc">Personalize your workspace palette</div>
+              </div>
+              <div className="settings-theme-grid">
+                {[
+                  { id: 'indigo', label: 'Obsidian Indigo', color: '#6366f1', bg: '#080b11' },
+                  { id: 'emerald', label: 'Emerald Forest', color: '#10b981', bg: '#06130e' },
+                  { id: 'cyan', label: 'Midnight Cyan', color: '#06b6d4', bg: '#051119' },
+                  { id: 'light', label: 'Studio Light', color: '#4f46e5', bg: '#f8fafc' }
+                ].map(theme => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    className={`settings-theme-option ${currentPalette === theme.id ? 'active' : ''}`}
+                    onClick={() => onChangePalette && onChangePalette(theme.id)}
+                  >
+                    <div className="theme-option-preview" style={{ background: theme.bg }}>
+                      <div className="theme-option-accent" style={{ background: theme.color }} />
+                    </div>
+                    <span className="theme-option-name">{theme.label}</span>
+                    {currentPalette === theme.id && (
+                      <span className="theme-option-check">
+                        <CheckIcon size={13} />
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Sound & Alerts Card with Toggle Button */}
+            <div className="settings-card-section sound-card-section" style={{ marginBottom: '12px' }}>
+              <div className="settings-sound-row">
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <VolumeIcon size={18} style={{ color: soundEnabled ? 'var(--accent-light, #818cf8)' : 'var(--text-tertiary, #64748b)' }} />
+                    <strong className="settings-card-title">Audio Bell &amp; Alert Chimes</strong>
+                  </div>
+                  <div className="settings-card-desc">
+                    Play harmonic audio chime on deadline alarms and task completion
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn-sound-preview"
+                    onClick={() => SoundFX.playReminderChime(true)}
+                    title="Test sound chime"
+                  >
+                    <PlayIcon size={9} style={{ marginRight: '4px' }} />
+                    Test
+                  </button>
+
+                  <label className="settings-switch" title={soundEnabled ? 'Disable Sound' : 'Enable Sound'}>
+                    <input
+                      type="checkbox"
+                      checked={soundEnabled}
+                      onChange={onToggleSound}
+                    />
+                    <span className="settings-slider" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Connect With */}
+            <div className="settings-section-divider" style={{ marginTop: '20px' }}>
+              <span className="settings-section-heading">CONNECT WITH</span>
+            </div>
+
+            {/* 1. Google Calendar Integration Card */}
+            <div className="settings-card-section gcal-card-section">
+              <div className="settings-card-header">
+                <div className="settings-card-icon-wrap cal">
+                  <CalendarIcon size={20} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong className="settings-card-title">Google Calendar</strong>
+                  <div className="settings-card-desc">
+                    {gcalConnected
+                      ? `Connected (${gcalEmail || 'Active Session'}) | 1-click & background auto-sync active`
+                      : 'Connect your Google account to sync scheduled tasks and reminders'}
+                  </div>
+                </div>
+                <span className={`badge-status-pill ${gcalConnected ? 'active' : ''}`}>
+                  {gcalConnected ? '✓ Connected' : 'Disconnected'}
+                </span>
+              </div>
+
+              <div className="btn-group-row" style={{ marginTop: '12px', justifyContent: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
+                {!gcalConnected ? (
                   <button
                     type="button"
                     className="btn btn-primary btn-sm"
-                    onClick={handleTestGoogleCalendar}
-                    disabled={isTestingGCal}
+                    onClick={handleConnectGoogle}
+                    disabled={isConnectingGCal || isCalendarLoading}
                   >
-                    <ZapIcon size={13} style={{ marginRight: '4px' }} />
-                    <span>{isTestingGCal ? 'Saving...' : 'Test Calendar Sync'}</span>
+                    <LinkIcon size={14} style={{ marginRight: '4px' }} />
+                    <span>{isConnectingGCal || isCalendarLoading ? 'Connecting...' : 'Connect Google Calendar'}</span>
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={handleDisconnectGoogle}
-                    style={{ color: '#f43f5e' }}
-                  >
-                    Disconnect
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* 2. Automated Resend Email Dispatcher */}
-          <div className="settings-card-section email-card-section" style={{ marginTop: '12px' }}>
-            <div className="settings-card-header">
-              <div className="settings-card-icon-wrap email">
-                <MailIcon size={20} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <strong className="settings-card-title">Resend Email &amp; Calendar Invites</strong>
-                <div className="settings-card-desc">Delivers instant task notifications &amp; calendar invite attachments over Port 443</div>
-              </div>
-              <span className="badge-status-pill active" id="email-cfg-badge">
-                Active (Port 443)
-              </span>
-            </div>
-
-            <div className="btn-group-row" style={{ marginTop: '10px' }}>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={handleTestEmail}
-                disabled={isTesting}
-              >
-                <ZapIcon size={13} style={{ marginRight: '4px' }} />
-                <span>{isTesting ? 'Dispatching...' : 'Send Test Email & Invite'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Section: Profile & Preferences */}
-          <div className="settings-section-divider" style={{ marginTop: '20px' }}>
-            <span className="settings-section-heading">PROFILE PREFERENCES</span>
-          </div>
-
-          {/* Display Name */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="settings-name-input">
-              Display Name
-            </label>
-            <input
-              id="settings-name-input"
-              className="form-input"
-              type="text"
-              maxLength="30"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="e.g. Alex Rivera"
-              required
-            />
-          </div>
-
-          {/* Default Email */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="settings-email-input">
-              Default Notification / Calendar Email
-            </label>
-            <input
-              id="settings-email-input"
-              className="form-input"
-              type="email"
-              placeholder="e.g. yourname@gmail.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-            />
-          </div>
-
-          {/* Security & Password section for logged-in users */}
-          {currentUser && (
-            <>
-              <div className="settings-section-divider" style={{ marginTop: '20px' }}>
-                <span className="settings-section-heading">SECURITY &amp; ACCESS</span>
-              </div>
-
-              <div className="settings-security-row">
-                <div className="security-info">
-                  <span className="security-title">Password Management</span>
-                  <span className="security-desc">Update your login password securely</span>
-                </div>
-                {onOpenAuthModal && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => {
-                      onClose();
-                      onOpenAuthModal('change-password');
-                    }}
-                  >
-                    <KeyIcon size={13} style={{ marginRight: '4px' }} />
-                    Change Password
-                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={handleTestGoogleCalendar}
+                      disabled={isTestingGCal}
+                    >
+                      <ZapIcon size={13} style={{ marginRight: '4px' }} />
+                      <span>{isTestingGCal ? 'Saving...' : 'Test Calendar Sync'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleDisconnectGoogle}
+                      style={{ color: '#f43f5e' }}
+                    >
+                      Disconnect
+                    </button>
+                  </>
                 )}
               </div>
-            </>
-          )}
+            </div>
 
-          {/* Modal Actions */}
-          <div className="modal-actions" style={{ marginTop: '22px' }}>
-            {currentUser && onLogout && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{ marginRight: 'auto', color: '#fb7185' }}
-                onClick={() => {
-                  onClose();
-                  onLogout();
-                }}
-              >
-                <LogOutIcon size={14} style={{ marginRight: '4px' }} />
-                Sign Out
-              </button>
+            {/* 2. Automated Resend Email Dispatcher */}
+            <div className="settings-card-section email-card-section" style={{ marginTop: '12px' }}>
+              <div className="settings-card-header">
+                <div className="settings-card-icon-wrap email">
+                  <MailIcon size={20} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong className="settings-card-title">Resend Email &amp; Calendar Invites</strong>
+                  <div className="settings-card-desc">Delivers instant task notifications &amp; calendar invite attachments over Port 443</div>
+                </div>
+                <span className="badge-status-pill active" id="email-cfg-badge">
+                  Active (Port 443)
+                </span>
+              </div>
+
+              <div className="btn-group-row" style={{ marginTop: '10px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleTestEmail}
+                  disabled={isTesting}
+                >
+                  <ZapIcon size={13} style={{ marginRight: '4px' }} />
+                  <span>{isTesting ? 'Dispatching...' : 'Send Test Email & Invite'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section: Profile Preferences */}
+            <div className="settings-section-divider" style={{ marginTop: '20px' }}>
+              <span className="settings-section-heading">PROFILE PREFERENCES</span>
+            </div>
+
+            {/* Display Name & Default Email in 2-Column Grid */}
+            <div className="settings-form-row-2col">
+              <div className="form-group">
+                <label className="form-label" htmlFor="settings-name-input">
+                  Display Name
+                </label>
+                <input
+                  id="settings-name-input"
+                  className="form-input"
+                  type="text"
+                  maxLength="30"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Alex Rivera"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="settings-email-input">
+                  Default Notification / Calendar Email
+                </label>
+                <input
+                  id="settings-email-input"
+                  className="form-input"
+                  type="email"
+                  placeholder="e.g. yourname@gmail.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Security & Password section for logged-in users */}
+            {currentUser && (
+              <>
+                <div className="settings-section-divider" style={{ marginTop: '20px' }}>
+                  <span className="settings-section-heading">SECURITY &amp; ACCESS</span>
+                </div>
+
+                <div className="settings-security-row">
+                  <div className="security-info">
+                    <span className="security-title">Password Management</span>
+                    <span className="security-desc">Update your login password securely</span>
+                  </div>
+                  {onOpenAuthModal && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => {
+                        onClose();
+                        onOpenAuthModal('change-password');
+                      }}
+                    >
+                      <KeyIcon size={13} style={{ marginRight: '4px' }} />
+                      Change Password
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="btn btn-primary">
-              Save Changes
-            </button>
-          </div>
-        </form>
+
+            {/* Modal Actions */}
+            <div className="modal-actions" style={{ marginTop: '22px' }}>
+              {currentUser && onLogout && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ marginRight: 'auto', color: '#fb7185' }}
+                  onClick={() => {
+                    onClose();
+                    onLogout();
+                  }}
+                >
+                  <LogOutIcon size={14} style={{ marginRight: '4px' }} />
+                  Sign Out
+                </button>
+              )}
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

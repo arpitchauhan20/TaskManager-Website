@@ -830,7 +830,6 @@ export default function App() {
       <main className="app-main">
         {/* Sticky Topbar */}
         <Header
-          currentFilter={currentFilter}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           currentSort={currentSort}
@@ -842,9 +841,6 @@ export default function App() {
           }}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onTestAlerts={handleTestAlerts}
-          currentUser={currentUser}
-          onOpenAuthModal={handleOpenAuthModal}
-          onLogout={handleLogout}
         />
 
         {/* Scrollable Canvas Area with Mobile Pull-to-Refresh */}
@@ -969,6 +965,10 @@ export default function App() {
         currentUser={currentUser}
         onOpenAuthModal={handleOpenAuthModal}
         onLogout={handleLogout}
+        currentPalette={palette}
+        onChangePalette={setPalette}
+        soundEnabled={soundEnabled}
+        onToggleSound={() => setSoundEnabled(!soundEnabled)}
       />
 
       <AuthModal
