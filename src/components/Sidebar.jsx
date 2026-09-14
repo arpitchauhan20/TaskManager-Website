@@ -30,7 +30,7 @@ export default function Sidebar({
   onLogout
 }) {
   const filters = [
-    { id: 'all', label: 'All Tasks', icon: <ClipboardIcon size={16} />, count: taskCounts.all },
+    { id: 'all', label: 'Dashboard', icon: <ClipboardIcon size={16} />, count: taskCounts.all },
     { id: 'today', label: 'Due Today', icon: <SunIcon size={16} />, count: taskCounts.today },
     { id: 'upcoming', label: 'Upcoming', icon: <CalendarIcon size={16} />, count: taskCounts.upcoming },
     { id: 'high', label: 'High Priority', icon: <FlameIcon size={16} />, count: taskCounts.high },

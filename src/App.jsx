@@ -870,15 +870,11 @@ export default function App() {
           {/* Condition 1: Overview Mode (No specific board opened) */}
           {activeDashboardBoard === null && (
             <div className="dashboard-overview-container tab-view-animated">
-              {/* Canvas Hero & Metrics Strip */}
+              {/* Grand Canvas Hero Greeting */}
               <StatCards
+                variant="greeting"
                 userName={userName}
                 stats={stats}
-                currentFilter={currentFilter}
-                onSelectFilter={(filter) => {
-                  setCurrentFilter(filter);
-                  setActiveDashboardBoard('tasks');
-                }}
               />
 
               {/* Two Executive Cards Grid */}
@@ -982,10 +978,10 @@ export default function App() {
             </div>
           )}
 
-          {/* Condition 3: Task Details Dedicated Board (With Quick Task Bar inside) */}
+          {/* Condition 3: Task Details Dedicated Board (With Quick Task Bar & Task Calculations inside) */}
           {activeDashboardBoard === 'tasks' && (
             <div className="task-board-wrapper tab-view-animated">
-              {/* Task Board Header with Back Button */}
+              {/* Task Board Header with Back Button & Metrics Calculation Strip */}
               <div className="board-top-header">
                 <div className="board-header-left">
                   <button
@@ -1003,15 +999,14 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* All Task Calculations Placed in Task Dashboard */}
                 <div className="board-header-right">
-                  <span className="badge-count-pill">
-                    {taskCounts.all} Active Tasks
-                  </span>
-                  {taskCounts.today > 0 && (
-                    <span className="badge-status-pill" style={{ color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
-                      {taskCounts.today} Due Today
-                    </span>
-                  )}
+                  <StatCards
+                    variant="metrics"
+                    stats={stats}
+                    currentFilter={currentFilter}
+                    onSelectFilter={setCurrentFilter}
+                  />
                 </div>
               </div>
 
@@ -1051,14 +1046,9 @@ export default function App() {
           )}
         </div>
 
-        {/* Fixed Bottom Navigation Bar Strip (Docked at the bottom like top navigation bar) */}
+        {/* Fixed Bottom Navigation Bar Strip without branding */}
         <footer className="app-main-footer">
           <div className="footer-compact-row">
-            <div className="footer-brand-mini">
-              <ZapIcon size={13} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-1px', color: 'var(--accent-light, #818cf8)', marginRight: '4px' }} />
-              <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
-              <span className="footer-tagline">Executive Task &amp; Calendar</span>
-            </div>
             <div className="footer-links-mini">
               <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
               <span className="footer-dot">•</span>

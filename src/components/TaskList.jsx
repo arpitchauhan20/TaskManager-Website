@@ -16,7 +16,7 @@ export default function TaskList({
   const [isOpen, setIsOpen] = useState(true);
 
   const filterNames = {
-    all: 'All Tasks',
+    all: 'Dashboard',
     today: 'Due Today',
     upcoming: 'Upcoming',
     high: 'High Priority',
