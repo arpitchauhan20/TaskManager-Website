@@ -12,7 +12,7 @@ import AuthModal from './components/AuthModal';
 import CalendarConnectionCard from './components/CalendarConnectionCard';
 import CalendarReminderCard from './components/CalendarReminderCard';
 import ToastContainer from './components/ToastContainer';
-import { ZapIcon, RefreshCwIcon, CalendarIcon, ClipboardIcon, ArrowLeftIcon } from './components/Icons';
+import { ZapIcon, RefreshCwIcon, CalendarIcon, ClipboardIcon, ArrowLeftIcon, GlobeIcon } from './components/Icons';
 import { SoundFX } from './services/soundEngine';
 import { AuthClient } from './services/authClient';
 import { TaskClient } from './services/taskClient';
@@ -74,7 +74,7 @@ export default function App() {
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState(null);
-  const [activeDashboardView, setActiveDashboardView] = useState('tasks'); // 'tasks' | 'calendar'
+  const [activeDashboardBoard, setActiveDashboardBoard] = useState(null); // null (overview) | 'calendar' | 'tasks'
 
   // Authentication State
   const [currentUser, setCurrentUser] = useState(null);
