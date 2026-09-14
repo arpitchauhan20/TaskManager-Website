@@ -52,6 +52,10 @@ export default function SettingsModal({
   const [isConnectingGCal, setIsConnectingGCal] = useState(false);
   const [isTestingGCal, setIsTestingGCal] = useState(false);
 
+  const initialName = (userName || '').trim();
+  const initialEmail = (reminderEmail || (currentUser?.email || '')).trim();
+  const hasChanges = name.trim() !== initialName || email.trim() !== initialEmail;
+
   useEffect(() => {
     setName(userName || '');
     setEmail(reminderEmail || (currentUser?.email || ''));
@@ -465,10 +469,17 @@ export default function SettingsModal({
                   Sign Out
                 </button>
               )}
-              <button type="button" className="btn btn-secondary" onClick={onClose}>
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={!hasChanges}
+                style={{
+                  opacity: hasChanges ? 1 : 0.35,
+                  cursor: hasChanges ? 'pointer' : 'not-allowed',
+                  boxShadow: hasChanges ? '0 4px 14px rgba(99, 102, 241, 0.4)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
                 Save Changes
               </button>
             </div>

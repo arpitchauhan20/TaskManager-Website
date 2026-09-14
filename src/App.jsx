@@ -915,24 +915,23 @@ export default function App() {
             currentFilter={currentFilter}
           />
 
-          {/* Executive Footer with Branding and Legal Links for Google OAuth Verification */}
+          {/* Executive Footer with Branding and Legal Links for Google OAuth Verification (Compact Single Row) */}
           <footer className="app-main-footer">
-            <div className="footer-content">
-              <div className="footer-brand">
-                <ZapIcon size={16} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-2px', color: '#818cf8', marginRight: '6px' }} />
+            <div className="footer-compact-row">
+              <div className="footer-brand-mini">
+                <ZapIcon size={13} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-1px', color: '#818cf8', marginRight: '4px' }} />
                 <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
-                <span className="footer-tagline">Executive Task &amp; Calendar Management</span>
+                <span className="footer-tagline">Executive Task &amp; Calendar</span>
               </div>
-              <div className="footer-links">
+              <div className="footer-links-mini">
                 <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
                 <span className="footer-dot">•</span>
                 <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>
                 <span className="footer-dot">•</span>
                 <a href="mailto:arpitchauhan5586@gmail.com">Contact Support</a>
+                <span className="footer-dot">•</span>
+                <span className="footer-copyright">© {new Date().getFullYear()} TaskFlow Pro</span>
               </div>
-            </div>
-            <div className="footer-copyright">
-              © {new Date().getFullYear()} TaskFlow Pro. All rights reserved.
             </div>
           </footer>
         </div>
