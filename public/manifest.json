@@ -1,7 +1,7 @@
 {
-  "name": "TaskFlow — Smart Task Manager",
-  "short_name": "TaskFlow",
-  "description": "A beautiful, smart task manager with deadline tracking and push notification reminders.",
+  "name": "TaskFlow Pro",
+  "short_name": "TaskFlow Pro",
+  "description": "Executive task management, Google Calendar synchronization, and automated reminders.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

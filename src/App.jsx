@@ -893,6 +893,27 @@ export default function App() {
             }}
             currentFilter={currentFilter}
           />
+
+          {/* Executive Footer with Branding and Legal Links for Google OAuth Verification */}
+          <footer className="app-main-footer">
+            <div className="footer-content">
+              <div className="footer-brand">
+                <span className="footer-icon">⚡</span>
+                <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
+                <span className="footer-tagline">— Executive Task &amp; Calendar Management</span>
+              </div>
+              <div className="footer-links">
+                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                <span className="footer-dot">•</span>
+                <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+                <span className="footer-dot">•</span>
+                <a href="mailto:arpitchauhan5586@gmail.com">Contact Support</a>
+              </div>
+            </div>
+            <div className="footer-copyright">
+              © {new Date().getFullYear()} TaskFlow Pro. All rights reserved.
+            </div>
+          </footer>
         </div>
       </main>
 

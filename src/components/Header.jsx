@@ -98,6 +98,11 @@ export default function Header({
       </button>
 
       <div className="topbar-context">
+        <div className="topbar-brand-badge" title="TaskFlow Pro Executive Suite">
+          <span className="topbar-brand-icon">⚡</span>
+          <span className="topbar-brand-title">TaskFlow <strong className="topbar-pro-pill">PRO</strong></span>
+        </div>
+        <span className="topbar-divider">/</span>
         <span className="view-title">{filterTitles[currentFilter] || 'All Tasks'}</span>
         <span className="date-badge">{currentDateText}</span>
       </div>
