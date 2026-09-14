@@ -149,21 +149,19 @@ router.get(['/api/calendar/status', '/status'], async (req, res) => {
       user.google_calendar_connected === 'true'
     );
 
-    if (!isMarkedConnected || !user.google_refresh_token) {
+    if (!isMarkedConnected) {
       return res.status(200).json({ connected: false });
     }
 
-    // Verify token validity with Google
-    const tokenCheck = await googleCalendarService.validateUserCalendarToken(user, req);
-    if (!tokenCheck.connected) {
+    if (user.google_refresh_token) {
+      const tokenCheck = await googleCalendarService.validateUserCalendarToken(user, req);
       return res.status(200).json({
-        connected: false,
-        error: tokenCheck.error || 'Google Calendar disconnected. Please reconnect.'
+        connected: Boolean(tokenCheck.connected)
       });
     }
 
     return res.status(200).json({
-      connected: true
+      connected: isMarkedConnected
     });
   } catch (err) {
     console.error('[CalendarRoutes] Error checking calendar status:', err);

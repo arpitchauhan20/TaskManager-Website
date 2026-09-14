@@ -174,7 +174,11 @@ router.get('/me', authMiddleware, (req, res) => {
     user: {
       id: req.user.id,
       name: req.user.name,
-      email: req.user.email
+      email: req.user.email,
+      google_calendar_connected: Boolean(
+        req.user.google_calendar_connected === true ||
+        req.user.google_calendar_connected === 'true'
+      )
     }
   });
 });
