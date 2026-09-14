@@ -182,7 +182,7 @@ export default function AuthModal({
       case 'register':
         return {
           title: 'Create an Account',
-          subtitle: 'Join TaskFlow Pro to sync tasks, deadlines, and automated reminders'
+          subtitle: 'Join Tech Tools to sync tasks, deadlines, and automated reminders'
         };
       case 'forgot':
         return {
@@ -192,7 +192,7 @@ export default function AuthModal({
       case 'reset':
         return {
           title: 'Reset Password',
-          subtitle: 'Create a strong, new password for your TaskFlow Pro account'
+          subtitle: 'Create a strong, new password for your Tech Tools account'
         };
       case 'change-password':
         return {
@@ -201,7 +201,7 @@ export default function AuthModal({
         };
       default:
         return {
-          title: 'Sign In to TaskFlow Pro',
+          title: 'Sign In to Tech Tools',
           subtitle: 'Enter your credentials to access your workspaces and synchronized alerts'
         };
     }

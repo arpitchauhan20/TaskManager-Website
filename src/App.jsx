@@ -831,6 +831,8 @@ export default function App() {
       <main className="app-main">
         {/* Sticky Topbar */}
         <Header
+          activeDashboardBoard={activeDashboardBoard}
+          onBackToOverview={() => setActiveDashboardBoard(null)}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           currentSort={currentSort}
@@ -981,26 +983,12 @@ export default function App() {
           {/* Condition 3: Task Details Dedicated Board (With Quick Task Bar & Task Calculations inside) */}
           {activeDashboardBoard === 'tasks' && (
             <div className="task-board-wrapper tab-view-animated">
-              {/* Task Board Header with Back Button & Metrics Calculation Strip */}
-              <div className="board-top-header">
-                <div className="board-header-left">
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm board-back-btn"
-                    onClick={() => setActiveDashboardBoard(null)}
-                    title="Back to Executive Overview"
-                  >
-                    <ArrowLeftIcon size={14} style={{ marginRight: '6px' }} />
-                    <span>Back to Overview</span>
-                  </button>
-                  <div className="board-title-group">
-                    <h2 className="board-main-title">Task Details &amp; Workspace</h2>
-                    <p className="board-sub-title">Manage active tasks, priorities, deadlines &amp; automated reminders</p>
-                  </div>
+              {/* Task Calculations Telemetry Strip Placed Inside Task Dashboard */}
+              <div className="task-board-telemetry-bar">
+                <div className="task-board-telemetry-left">
+                  <span className="task-board-tagline">Manage active tasks, priorities, deadlines &amp; automated reminders</span>
                 </div>
-
-                {/* All Task Calculations Placed in Task Dashboard */}
-                <div className="board-header-right">
+                <div className="task-board-telemetry-right">
                   <StatCards
                     variant="metrics"
                     stats={stats}
@@ -1046,17 +1034,24 @@ export default function App() {
           )}
         </div>
 
-        {/* Fixed Bottom Navigation Bar Strip without branding */}
+        {/* Fixed Bottom Navigation Bar Strip */}
         <footer className="app-main-footer">
-          <div className="footer-compact-row">
-            <div className="footer-links-mini">
+          <div className="footer-layout-grid">
+            {/* Left Spacer for balanced center alignment */}
+            <div className="footer-grid-left" />
+
+            {/* Center: 2026 TaskFlow Copyright */}
+            <div className="footer-grid-center">
+              <span className="footer-copyright">© {new Date().getFullYear()} TaskFlow Pro</span>
+            </div>
+
+            {/* Right: All Navigation & Support Links */}
+            <div className="footer-grid-right">
               <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
               <span className="footer-dot">•</span>
               <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>
               <span className="footer-dot">•</span>
               <a href="mailto:arpitchauhan5586@gmail.com">Contact Support</a>
-              <span className="footer-dot">•</span>
-              <span className="footer-copyright">© {new Date().getFullYear()} TaskFlow Pro</span>
             </div>
           </div>
         </footer>

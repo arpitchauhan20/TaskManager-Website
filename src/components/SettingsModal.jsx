@@ -19,7 +19,9 @@ import {
   LogOutIcon,
   VolumeIcon,
   PlayIcon,
-  CheckIcon
+  CheckIcon,
+  UserPlusIcon,
+  SendIcon
 } from './Icons';
 
 export default function SettingsModal({
@@ -45,6 +47,11 @@ export default function SettingsModal({
   const [email, setEmail] = useState(reminderEmail || '');
   const [isTesting, setIsTesting] = useState(false);
 
+  // Friend Invite / Google OAuth Request state
+  const [friendName, setFriendName] = useState('');
+  const [friendEmail, setFriendEmail] = useState('');
+  const [isSendingFriendInvite, setIsSendingFriendInvite] = useState(false);
+
   // Google Calendar OAuth state
   const isInitialConnected = Boolean(externalConnected || currentUser?.google_calendar_connected);
   const [gcalConnected, setGcalConnected] = useState(isInitialConnected);
@@ -55,6 +62,37 @@ export default function SettingsModal({
   const initialName = (userName || '').trim();
   const initialEmail = (reminderEmail || (currentUser?.email || '')).trim();
   const hasChanges = name.trim() !== initialName || email.trim() !== initialEmail;
+
+  const handleSendFriendInviteRequest = async () => {
+    const fEmail = (friendEmail || '').trim();
+    const fName = (friendName || '').trim();
+    if (!fEmail || !fEmail.includes('@')) {
+      if (onShowToast) onShowToast('error', '⚠️', 'Please enter a valid Gmail address for your friend.');
+      return;
+    }
+
+    setIsSendingFriendInvite(true);
+    if (onShowToast) onShowToast('info', '⏳', `Sending Google OAuth invite request to Arpit...`);
+
+    const requesterName = name.trim() || userName || 'Executive User';
+    const requesterEmail = email.trim() || currentUser?.email || 'Not provided';
+
+    const res = await sendTaskEmail({
+      recipient: 'arpitchauhan5586@gmail.com',
+      title: `Google OAuth Access Request: ${fName || 'Friend'} (${fEmail})`,
+      description: `Google OAuth Test User Invitation Request\n\nRequester Information:\n• Name: ${requesterName}\n• Email: ${requesterEmail}\n\nFriend to Add to Google OAuth Test Users:\n• Name: ${fName || 'Not specified'}\n• Gmail: ${fEmail}\n\nAction for Admin:\n1. Open Google Cloud Console → APIs & Services → OAuth consent screen → Audience / Test users.\n2. Click '+ ADD USERS' and enter: ${fEmail}\n3. Save. Once added, your friend can connect Google Calendar seamlessly without 403 errors!`,
+      isTest: false
+    });
+
+    setIsSendingFriendInvite(false);
+    if (res.success) {
+      if (onShowToast) onShowToast('success', '✨', `Request sent! Arpit will add ${fEmail} to Google OAuth Test Users.`);
+      setFriendName('');
+      setFriendEmail('');
+    } else {
+      if (onShowToast) onShowToast('error', '❌', res.error || 'Failed to dispatch invite request.');
+    }
+  };
 
   useEffect(() => {
     setName(userName || '');
@@ -391,6 +429,66 @@ export default function SettingsModal({
                   >
                     <ZapIcon size={13} style={{ marginRight: '4px' }} />
                     <span>{isTesting ? 'Dispatching...' : 'Send Test Email & Invite'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Inner Divider */}
+              <div className="settings-card-inner-divider" />
+
+              {/* 3. Request Google OAuth Test Access for a Friend */}
+              <div className="settings-sub-section">
+                <div className="settings-card-header">
+                  <div className="settings-card-icon-wrap cal" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}>
+                    <UserPlusIcon size={18} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong className="settings-card-title">Request Friend Invite / Google OAuth Access</strong>
+                    <div className="settings-card-desc">
+                      Fill in your friend's details to automatically dispatch an invite request to <strong style={{ color: 'var(--text-primary, #ffffff)' }}>arpitchauhan5586@gmail.com</strong> for adding to Google OAuth test users.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-form-row-2col" style={{ marginTop: '12px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="friend-name-input" style={{ fontSize: '11.5px' }}>
+                      Friend Name
+                    </label>
+                    <input
+                      id="friend-name-input"
+                      className="form-input"
+                      type="text"
+                      placeholder="e.g. Alex Taylor"
+                      value={friendName}
+                      onChange={e => setFriendName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="friend-email-input" style={{ fontSize: '11.5px' }}>
+                      Friend Gmail Address
+                    </label>
+                    <input
+                      id="friend-email-input"
+                      className="form-input"
+                      type="email"
+                      placeholder="e.g. friend@gmail.com"
+                      value={friendEmail}
+                      onChange={e => setFriendEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="btn-group-row" style={{ marginTop: '12px', justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={handleSendFriendInviteRequest}
+                    disabled={isSendingFriendInvite || !friendEmail.trim()}
+                  >
+                    <SendIcon size={13} style={{ marginRight: '5px' }} />
+                    <span>{isSendingFriendInvite ? 'Sending Request...' : 'Send Friend Invite Request'}</span>
                   </button>
                 </div>
               </div>

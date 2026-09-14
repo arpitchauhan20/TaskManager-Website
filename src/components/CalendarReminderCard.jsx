@@ -239,27 +239,12 @@ export default function CalendarReminderCard({
 
   return (
     <div className="calendar-board-wrapper tab-view-animated">
-      {/* Board Top Navigation Bar */}
-      <div className="board-top-header">
-        <div className="board-header-left">
-          {onBack && (
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm board-back-btn"
-              onClick={onBack}
-              title="Back to Executive Overview"
-            >
-              <ArrowLeftIcon size={14} style={{ marginRight: '6px' }} />
-              <span>Back to Overview</span>
-            </button>
-          )}
-          <div className="board-title-group">
-            <h2 className="board-main-title">Google Calendar &amp; Reminder Suite</h2>
-            <p className="board-sub-title">Visual scheduling, 1-click Google sync &amp; reminder history</p>
-          </div>
+      {/* Top Status Context Bar (Compact, No Duplicate Back Button Strip) */}
+      <div className="calendar-status-bar">
+        <div className="cal-status-left">
+          <span className="cal-section-tagline">Visual scheduling, 1-click Google sync &amp; reminder history</span>
         </div>
-
-        <div className="board-header-right">
+        <div className="cal-status-right">
           <span className={`badge-status-pill ${isCalendarConnected ? 'active' : ''}`}>
             {isCalendarConnected ? '✓ Google Synced' : 'Offline'}
           </span>

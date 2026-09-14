@@ -78,7 +78,7 @@ export default function Sidebar({
             </div>
             <div className="brand-text">
               <div className="brand-name">
-                TaskFlow <span>PRO</span>
+                Tech Tools <span>PRO</span>
               </div>
               <div className="brand-workspace">Executive Suite</div>
             </div>

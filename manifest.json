@@ -1,6 +1,6 @@
 {
-  "name": "TaskFlow Pro",
-  "short_name": "TaskFlow Pro",
+  "name": "Tech Tools",
+  "short_name": "Tech Tools",
   "description": "Executive task management, Google Calendar synchronization, and automated reminders.",
   "start_url": "./index.html",
   "scope": "./",

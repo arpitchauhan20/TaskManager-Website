@@ -1,7 +1,7 @@
 {
-  "name": "taskflow-pro",
+  "name": "tech-tools",
   "version": "2.0.0",
-  "description": "Executive task management system with Web Push notifications and backend reminder scheduler",
+  "description": "Tech Tools — Executive task management, visual scheduling, Google Calendar sync, and automated reminders",
   "main": "server.js",
   "scripts": {
     "dev": "vite",

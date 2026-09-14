@@ -36,20 +36,20 @@ function generateICSInvite(task, recipientEmail) {
 
   return [
     'BEGIN:VCALENDAR',
-    'PRODID:-//TaskFlow Pro//Deadline Calendar Engine//EN',
+    'PRODID:-//Tech Tools//Deadline Calendar Engine//EN',
     'VERSION:2.0',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
 
     // --- SCHEDULED DEADLINE EVENT WITH EMBEDDED REMINDER ALARM ---
     'BEGIN:VEVENT',
-    `UID:taskflow_${taskId}@taskflow.pro`,
+    `UID:techtools_${taskId}@techtools.pro`,
     `DTSTAMP:${formatICSDate(now)}`,
     `DTSTART:${formatICSDate(deadlineStart)}`,
     `DTEND:${formatICSDate(deadlineEnd)}`,
     `SUMMARY:🎯 Deadline: ${cleanTitle}`,
-    `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}\\n\\nManaged via TaskFlow Pro`,
-    'ORGANIZER;CN="TaskFlow Pro":mailto:onboarding@resend.dev',
+    `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadlineStart.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${cleanDesc}\\n\\nManaged via Tech Tools`,
+    'ORGANIZER;CN="Tech Tools":mailto:onboarding@resend.dev',
     `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;RSVP=TRUE;CN="${attendeeEmail}":mailto:${attendeeEmail}`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
@@ -69,14 +69,14 @@ function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd) {
   const formatGCalDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
   const title = encodeURIComponent(`🎯 Deadline: ${task.title || 'Task Reminder'}`);
   const details = encodeURIComponent(
-    `Task: ${task.title || ''}\nDeadline: ${deadlineStart.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via TaskFlow Pro: https://task-manager-website-psi.vercel.app`
+    `Task: ${task.title || ''}\nDeadline: ${deadlineStart.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Tech Tools`
   );
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
 }
 
 // Helper: Sanitize & format Resend 'from' address to prevent 422 validation errors
 function resolveFromEmail(raw) {
-  const fallback = 'TaskFlow Pro <onboarding@resend.dev>';
+  const fallback = 'Tech Tools <onboarding@resend.dev>';
   if (!raw || typeof raw !== 'string') return fallback;
 
   let cleaned = raw.trim();
@@ -89,25 +89,16 @@ function resolveFromEmail(raw) {
 
   const matchWithAngle = cleaned.match(/^([^<]*)<([^>]+)>$/);
   if (matchWithAngle) {
-    const name = matchWithAngle[1].trim();
-    const email = matchWithAngle[2].trim();
-    if (email && email.includes('@')) {
-      return name ? `${name} <${email}>` : email;
-    }
+    const namePart = matchWithAngle[1].trim();
+    const emailPart = matchWithAngle[2].trim();
+    const finalName = namePart ? namePart.replace(/[^\w\s.-]/g, '') : 'Tech Tools';
+    return `${finalName} <${emailPart}>`;
   }
 
-  if (cleaned.includes('@') && !cleaned.includes('<') && !cleaned.includes('>')) {
-    return `TaskFlow Pro <${cleaned}>`;
-  }
-
-  if (!cleaned.includes('@')) {
-    return `${cleaned} <onboarding@resend.dev>`;
-  }
-
-  return fallback;
+  return `Tech Tools <${cleaned}>`;
 }
 
-module.exports = async function handler(req, res) {
+module.exports = async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -144,7 +135,7 @@ module.exports = async function handler(req, res) {
   const resend = new Resend(apiKey);
   const taskObj = {
     taskId: req.body.taskId || 'task_' + Date.now(),
-    title: title || 'TaskFlow Pro Live Test',
+    title: title || 'Tech Tools Live Test',
     description: description || '',
     deadline: deadline || new Date(Date.now() + 3600000).toISOString(),
     priority: priority || 'high',
@@ -170,7 +161,7 @@ module.exports = async function handler(req, res) {
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; border-radius: 14px; overflow: hidden; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
       <!-- Header -->
       <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 24px 30px;">
-        <h1 style="margin: 0; font-size: 22px; color: #ffffff; font-weight: 700; letter-spacing: -0.02em;">TaskFlow Pro Reminder</h1>
+        <h1 style="margin: 0; font-size: 22px; color: #ffffff; font-weight: 700; letter-spacing: -0.02em;">Tech Tools Reminder</h1>
         <p style="margin: 6px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.85);">Task Reminder & Google Calendar Sync</p>
       </div>
 
@@ -206,7 +197,7 @@ module.exports = async function handler(req, res) {
 
       <!-- Footer -->
       <div style="background: #090d16; padding: 16px 30px; font-size: 11px; color: #64748b; text-align: center;">
-        Sent automatically by TaskFlow Pro • <a href="https://task-manager-website-psi.vercel.app" style="color: #818cf8; text-decoration: none;">task-manager-website-psi.vercel.app</a>
+        Sent automatically by Tech Tools
       </div>
     </div>
   `;
@@ -215,7 +206,7 @@ module.exports = async function handler(req, res) {
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: [targetRecipient],
-      subject: isTest ? 'TaskFlow Pro: Live Resend & Google Calendar Test' : `Task Reminder: ${taskObj.title} [TaskFlow]`,
+      subject: isTest ? 'Tech Tools: Live Resend & Google Calendar Test' : `Task Reminder: ${taskObj.title} [Tech Tools]`,
       html,
       attachments: [
         {
