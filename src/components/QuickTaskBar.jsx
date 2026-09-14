@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PlusIcon } from './Icons';
 
 export default function QuickTaskBar({ onQuickAdd, onOpenDetailedModal }) {
   const [text, setText] = useState('');
@@ -14,7 +15,7 @@ export default function QuickTaskBar({ onQuickAdd, onOpenDetailedModal }) {
 
   return (
     <section className="quick-task-bar">
-      <span className="quick-plus-icon">+</span>
+      <PlusIcon size={18} className="quick-plus-icon" />
       <input
         type="text"
         id="quick-task-input"

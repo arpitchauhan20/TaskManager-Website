@@ -12,6 +12,7 @@ import AuthModal from './components/AuthModal';
 import CalendarConnectionCard from './components/CalendarConnectionCard';
 import CalendarReminderCard from './components/CalendarReminderCard';
 import ToastContainer from './components/ToastContainer';
+import { ZapIcon, RefreshCwIcon } from './components/Icons';
 import { SoundFX } from './services/soundEngine';
 import { AuthClient } from './services/authClient';
 import { TaskClient } from './services/taskClient';
@@ -861,7 +862,7 @@ export default function App() {
               style={{ height: `${pullDistance}px` }}
             >
               <div className="pull-indicator-pill">
-                <span className={`pull-icon ${isRefreshing ? 'spinning' : ''}`}>🔄</span>
+                <RefreshCwIcon size={16} className={`pull-icon ${isRefreshing ? 'spinning' : ''}`} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }} />
                 <span className="pull-text">
                   {isRefreshing ? 'Refreshing application...' : pullDistance >= 48 ? 'Release to refresh' : 'Pull down to refresh'}
                 </span>
@@ -922,7 +923,7 @@ export default function App() {
           <footer className="app-main-footer">
             <div className="footer-content">
               <div className="footer-brand">
-                <span className="footer-icon">⚡</span>
+                <ZapIcon size={16} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-2px', color: '#818cf8', marginRight: '6px' }} />
                 <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
                 <span className="footer-tagline">— Executive Task &amp; Calendar Management</span>
               </div>

@@ -5,8 +5,18 @@ import {
   getConnectedGoogleEmail,
   requestGoogleCalendarAccess,
   disconnectGoogleCalendar,
-  saveEventToGoogleCalendar
+  saveEventToGoogleCalendar,
+  fetchCalendarStatus
 } from '../services/calendarService';
+import {
+  XIcon,
+  CalendarIcon,
+  MailIcon,
+  LinkIcon,
+  ZapIcon,
+  KeyIcon,
+  LogOutIcon
+} from './Icons';
 
 export default function SettingsModal({
   isOpen,
@@ -57,19 +67,19 @@ export default function SettingsModal({
       name: name.trim(),
       email: email.trim()
     });
-    if (onShowToast) onShowToast('success', '👤', 'Profile and automation settings saved');
+    if (onShowToast) onShowToast('success', 'user', 'Profile and automation settings saved');
     onClose();
   };
 
   const handleTestEmail = async () => {
     const target = email.trim() || currentUser?.email;
     if (!target) {
-      if (onShowToast) onShowToast('error', '⚠️', 'Please enter your email address in the field above before testing.');
+      if (onShowToast) onShowToast('error', 'alert', 'Please enter your email address in the field above before testing.');
       return;
     }
 
     setIsTesting(true);
-    if (onShowToast) onShowToast('info', '⏳', `Sending live test email and calendar invite via Resend to ${target}...`);
+    if (onShowToast) onShowToast('info', 'clock', `Sending live test email and calendar invite via Resend to ${target}...`);
 
     const res = await sendTaskEmail({
       recipient: target,
@@ -82,9 +92,9 @@ export default function SettingsModal({
 
     setIsTesting(false);
     if (res.success) {
-      if (onShowToast) onShowToast('success', '🎉', `Test email sent to ${target}! Check your inbox.`);
+      if (onShowToast) onShowToast('success', 'sparkles', `Test email sent to ${target}! Check your inbox.`);
     } else {
-      if (onShowToast) onShowToast('error', '❌', res.error || 'Failed to dispatch test email');
+      if (onShowToast) onShowToast('error', 'alert', res.error || 'Failed to dispatch test email');
     }
   };
 
@@ -98,9 +108,9 @@ export default function SettingsModal({
       await requestGoogleCalendarAccess({ promptConsent: true });
       setGcalConnected(true);
       setGcalEmail(getConnectedGoogleEmail());
-      if (onShowToast) onShowToast('success', '📅', 'Google Calendar connected! Tasks will now auto-save directly in the background.');
+      if (onShowToast) onShowToast('success', 'calendar', 'Google Calendar connected! Tasks will now auto-save directly in the background.');
     } catch (err) {
-      if (onShowToast) onShowToast('error', '❌', err.message || 'Failed to authorize Google Calendar');
+      if (onShowToast) onShowToast('error', 'alert', err.message || 'Failed to authorize Google Calendar');
     } finally {
       setIsConnectingGCal(false);
     }
@@ -116,7 +126,7 @@ export default function SettingsModal({
     disconnectGoogleCalendar();
     setGcalConnected(false);
     setGcalEmail(null);
-    if (onShowToast) onShowToast('info', 'ℹ️', 'Google Calendar disconnected.');
+    if (onShowToast) onShowToast('info', 'info', 'Google Calendar disconnected.');
   };
 
   const handleTestGoogleCalendar = async () => {
@@ -131,12 +141,12 @@ export default function SettingsModal({
         reminderPresetMinutes: 15
       });
       if (res.success) {
-        if (onShowToast) onShowToast('success', '🎉', 'Event auto-saved directly to Google Calendar! Check calendar.google.com');
+        if (onShowToast) onShowToast('success', 'sparkles', 'Event auto-saved directly to Google Calendar! Check calendar.google.com');
       } else {
-        if (onShowToast) onShowToast('error', '❌', res.error || 'Failed to auto-save test event');
+        if (onShowToast) onShowToast('error', 'alert', res.error || 'Failed to auto-save test event');
       }
     } catch (err) {
-      if (onShowToast) onShowToast('error', '❌', err.message || 'Calendar auto-save failed');
+      if (onShowToast) onShowToast('error', 'alert', err.message || 'Calendar auto-save failed');
     } finally {
       setIsTestingGCal(false);
     }
@@ -153,7 +163,7 @@ export default function SettingsModal({
             <p className="modal-subtitle">Connect Google Calendar, Resend Email dispatch &amp; manage your profile</p>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose} title="Close">
-            ✕
+            <XIcon size={18} />
           </button>
         </div>
 
@@ -203,12 +213,7 @@ export default function SettingsModal({
           <div className="settings-card-section gcal-card-section">
             <div className="settings-card-header">
               <div className="settings-card-icon-wrap cal">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
+                <CalendarIcon size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <strong className="settings-card-title">Google Calendar</strong>
@@ -231,10 +236,7 @@ export default function SettingsModal({
                   onClick={handleConnectGoogle}
                   disabled={isConnectingGCal || isCalendarLoading}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
+                  <LinkIcon size={14} style={{ marginRight: '4px' }} />
                   <span>{isConnectingGCal || isCalendarLoading ? 'Connecting...' : 'Connect Google Calendar'}</span>
                 </button>
               ) : (
@@ -245,7 +247,8 @@ export default function SettingsModal({
                     onClick={handleTestGoogleCalendar}
                     disabled={isTestingGCal}
                   >
-                    <span>{isTestingGCal ? '⏳ Saving...' : '⚡ Test Calendar Sync'}</span>
+                    <ZapIcon size={13} style={{ marginRight: '4px' }} />
+                    <span>{isTestingGCal ? 'Saving...' : 'Test Calendar Sync'}</span>
                   </button>
                   <button
                     type="button"
@@ -264,10 +267,7 @@ export default function SettingsModal({
           <div className="settings-card-section email-card-section" style={{ marginTop: '12px' }}>
             <div className="settings-card-header">
               <div className="settings-card-icon-wrap email">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
+                <MailIcon size={20} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <strong className="settings-card-title">Resend Email &amp; Calendar Invites</strong>
@@ -285,7 +285,8 @@ export default function SettingsModal({
                 onClick={handleTestEmail}
                 disabled={isTesting}
               >
-                <span>{isTesting ? '⏳ Dispatching...' : '⚡ Send Test Email & Invite'}</span>
+                <ZapIcon size={13} style={{ marginRight: '4px' }} />
+                <span>{isTesting ? 'Dispatching...' : 'Send Test Email & Invite'}</span>
               </button>
             </div>
           </div>
@@ -348,7 +349,8 @@ export default function SettingsModal({
                       onOpenAuthModal('change-password');
                     }}
                   >
-                    🔑 Change Password
+                    <KeyIcon size={13} style={{ marginRight: '4px' }} />
+                    Change Password
                   </button>
                 )}
               </div>
@@ -367,7 +369,8 @@ export default function SettingsModal({
                   onLogout();
                 }}
               >
-                🚪 Sign Out
+                <LogOutIcon size={14} style={{ marginRight: '4px' }} />
+                Sign Out
               </button>
             )}
             <button type="button" className="btn btn-secondary" onClick={onClose}>

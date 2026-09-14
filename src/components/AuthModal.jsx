@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { AuthClient } from '../services/authClient';
+import {
+  XIcon,
+  AlertTriangleIcon,
+  InfoIcon
+} from './Icons';
 
 // Eye icon SVGs for show/hide toggle
 const EyeOpen = () => (
@@ -115,7 +120,7 @@ export default function AuthModal({
       if (mode === 'login') {
         const res = await AuthClient.login({ email, password });
         onAuthSuccess(res.user);
-        onShowToast('success', '👋', `Welcome back, ${res.user.name || 'Executive'}!`);
+        onShowToast('success', 'sparkles', `Welcome back, ${res.user.name || 'Executive'}!`);
         onClose();
       } else if (mode === 'register') {
         if (password !== confirmPassword) {
@@ -126,7 +131,7 @@ export default function AuthModal({
         }
         const res = await AuthClient.register({ name, email, password });
         onAuthSuccess(res.user);
-        onShowToast('success', '🎉', `Account created! Welcome, ${res.user.name}.`);
+        onShowToast('success', 'sparkles', `Account created! Welcome, ${res.user.name}.`);
         onClose();
       } else if (mode === 'forgot') {
         const res = await AuthClient.forgotPassword(email);
@@ -136,7 +141,7 @@ export default function AuthModal({
         } else {
           setInfoMessage(res.message || 'If an account exists with that email, a password reset link has been sent. Check your inbox and spam folder.');
         }
-        onShowToast('info', '📧', 'Password reset instructions dispatched.');
+        onShowToast('info', 'mail', 'Password reset instructions dispatched.');
       } else if (mode === 'reset') {
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match. Please verify.');
@@ -148,7 +153,7 @@ export default function AuthModal({
           token: tokenInput.trim(),
           newPassword: password
         });
-        onShowToast('success', '🔑', res.message || 'Password reset successfully!');
+        onShowToast('success', 'key', res.message || 'Password reset successfully!');
         setInfoMessage('Password updated! You can now sign in with your new password.');
         setMode('login');
       } else if (mode === 'change-password') {
@@ -162,7 +167,7 @@ export default function AuthModal({
           currentPassword,
           newPassword: password
         });
-        onShowToast('success', '🛡️', res.message || 'Password changed successfully!');
+        onShowToast('success', 'shield', res.message || 'Password changed successfully!');
         onClose();
       }
     } catch (err) {
@@ -219,7 +224,7 @@ export default function AuthModal({
             <p className="modal-subtitle">{subtitle}</p>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose} title="Close">
-            ✕
+            <XIcon size={18} />
           </button>
         </div>
 
@@ -254,9 +259,12 @@ export default function AuthModal({
             padding: '10px 14px',
             color: '#fb7185',
             fontSize: '13px',
-            marginBottom: '16px'
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center'
           }}>
-            ⚠️ {errorMessage}
+            <AlertTriangleIcon size={15} style={{ marginRight: '8px', flexShrink: 0 }} />
+            <span>{errorMessage}</span>
           </div>
         )}
 
@@ -270,9 +278,12 @@ export default function AuthModal({
             fontSize: '13px',
             marginBottom: '16px',
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all'
+            wordBreak: 'break-all',
+            display: 'flex',
+            alignItems: 'flex-start'
           }}>
-            ℹ️ {infoMessage}
+            <InfoIcon size={15} style={{ marginRight: '8px', marginTop: '2px', flexShrink: 0 }} />
+            <span>{infoMessage}</span>
           </div>
         )}
 

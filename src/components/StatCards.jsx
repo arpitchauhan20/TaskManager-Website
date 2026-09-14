@@ -1,4 +1,5 @@
 import React from 'react';
+import { SparklesIcon } from './Icons';
 
 export default function StatCards({ userName, stats, currentFilter, onSelectFilter }) {
   const getGreeting = () => {
@@ -14,8 +15,8 @@ export default function StatCards({ userName, stats, currentFilter, onSelectFilt
       <div className="greeting-block">
         <h1 className="greeting-text">
           {getGreeting()},{' '}
-          <span className="greeting-name">{userName || 'Executive'}</span>{' '}
-          <span className="wave">👋</span>
+          <span className="greeting-name">{userName || 'Executive'}</span>
+          <SparklesIcon size={20} className="sparkle-greet" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '6px', color: 'var(--accent-light, #818cf8)' }} />
         </h1>
         <p className="greeting-subtitle">
           You have {stats.today} tasks due today and {stats.high} high priority deadlines.

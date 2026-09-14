@@ -1,4 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  CalendarIcon,
+  ClockIcon,
+  AlertTriangleIcon,
+  HourglassIcon,
+  BellIcon,
+  VolumeIcon,
+  MailIcon,
+  EditIcon,
+  TrashIcon,
+  MoreHorizontalIcon,
+  DownloadIcon
+} from './Icons';
 
 export default function TaskRow({
   task,
@@ -22,6 +35,7 @@ export default function TaskRow({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
+
   const isOverdue = () => {
     if (task.completed || !task.deadline) return false;
     return new Date(task.deadline).getTime() < Date.now();
@@ -78,7 +92,7 @@ export default function TaskRow({
   };
 
   const reminderDesc = formatReminderDesc();
-  const channels = task.channels || { push: true, sound: true, calendar: false, whatsapp: false, email: false };
+  const channels = task.channels || { push: true, sound: true, calendar: false, email: false };
 
   return (
     <div
@@ -110,10 +124,15 @@ export default function TaskRow({
       {/* Col 3: Deadline & Urgency */}
       <div className="task-col-deadline">
         <span className="tag-deadline-date">
-          📅 {formatDate(task.deadline)} {formatTime(task.deadline)}
+          <CalendarIcon size={12} style={{ marginRight: '4px', verticalAlign: '-1px' }} />
+          {formatDate(task.deadline)} {formatTime(task.deadline)}
         </span>
         <span className={`tag-deadline-rel ${overdue ? 'overdue' : isUrgent ? 'urgent' : ''}`}>
-          {overdue ? '⚠️ ' : isUrgent ? '⏳ ' : '⌛ '}
+          {overdue ? (
+            <AlertTriangleIcon size={12} style={{ marginRight: '3px', verticalAlign: '-1px', display: 'inline' }} />
+          ) : (
+            <HourglassIcon size={12} style={{ marginRight: '3px', verticalAlign: '-1px', display: 'inline' }} />
+          )}
           {getRelativeTime(task.deadline)}
         </span>
       </div>
@@ -129,17 +148,38 @@ export default function TaskRow({
       <div className="task-col-reminder">
         {reminderDesc ? (
           <span className="tag-reminder-chip" title={`Reminder scheduled: ${reminderDesc}`}>
-            ⏰ {reminderDesc}
+            <ClockIcon size={11} style={{ marginRight: '4px', verticalAlign: '-1px' }} />
+            {reminderDesc}
           </span>
         ) : (
           <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>No alert</span>
         )}
 
         <div className="task-channels-pill-row">
-          {channels.push && <span className="chan-badge push" title="Browser & Mobile Push">🔔 Push</span>}
-          {channels.sound && <span className="chan-badge sound" title="10s Sustained Audio Bell Chime">🔊 Bell</span>}
-          {channels.calendar && <span className="chan-badge cal" title="Calendar Sync Enabled">📅 Cal</span>}
-          {channels.email && <span className="chan-badge mail" title="Automated Resend Email">📧 Mail</span>}
+          {channels.push && (
+            <span className="chan-badge push" title="Browser & Mobile Push">
+              <BellIcon size={10} style={{ marginRight: '3px', verticalAlign: '-1px' }} />
+              Push
+            </span>
+          )}
+          {channels.sound && (
+            <span className="chan-badge sound" title="10s Sustained Audio Bell Chime">
+              <VolumeIcon size={10} style={{ marginRight: '3px', verticalAlign: '-1px' }} />
+              Bell
+            </span>
+          )}
+          {channels.calendar && (
+            <span className="chan-badge cal" title="Calendar Sync Enabled">
+              <CalendarIcon size={10} style={{ marginRight: '3px', verticalAlign: '-1px' }} />
+              Cal
+            </span>
+          )}
+          {channels.email && (
+            <span className="chan-badge mail" title="Automated Resend Email">
+              <MailIcon size={10} style={{ marginRight: '3px', verticalAlign: '-1px' }} />
+              Mail
+            </span>
+          )}
         </div>
       </div>
 
@@ -152,12 +192,7 @@ export default function TaskRow({
           onClick={() => onSyncGoogleCalendar(task)}
           title="1-Click Sync to Google Calendar"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
+          <CalendarIcon size={13} style={{ flexShrink: 0 }} />
           <span style={{ color: '#ffffff', fontWeight: 600 }}>Sync</span>
         </button>
 
@@ -168,7 +203,7 @@ export default function TaskRow({
           onClick={() => onEdit(task.id)}
           title="Edit Task"
         >
-          ✏️
+          <EditIcon size={14} />
         </button>
 
         {/* More Actions Toggle */}
@@ -178,7 +213,7 @@ export default function TaskRow({
           onClick={() => setMenuOpen(prev => !prev)}
           title="More options (Email, Calendar .ics)"
         >
-          •••
+          <MoreHorizontalIcon size={14} />
         </button>
 
         {/* Delete Button */}
@@ -188,13 +223,12 @@ export default function TaskRow({
           onClick={() => onDelete(task.id)}
           title="Delete Task"
         >
-          🗑️
+          <TrashIcon size={14} />
         </button>
 
         {/* Floating More Options Dropdown */}
         {menuOpen && (
           <div className="action-menu-dropdown" ref={menuRef} onClick={e => e.stopPropagation()}>
-
             <button
               type="button"
               className="action-menu-item mail"
@@ -203,7 +237,7 @@ export default function TaskRow({
                 onSendEmail(task);
               }}
             >
-              <span>📧</span>
+              <MailIcon size={14} />
               <span>Send Email via Resend</span>
             </button>
 
@@ -215,7 +249,7 @@ export default function TaskRow({
                 onDownloadICS(task);
               }}
             >
-              <span>📥</span>
+              <DownloadIcon size={14} />
               <span>Download .ics File</span>
             </button>
           </div>

@@ -1,4 +1,14 @@
 import React, { useEffect } from 'react';
+import {
+  ZapIcon,
+  ClipboardIcon,
+  SunIcon,
+  CalendarIcon,
+  FlameIcon,
+  AlertTriangleIcon,
+  CheckCircleIcon,
+  KeyIcon
+} from './Icons';
 
 export default function Sidebar({
   isOpen,
@@ -20,12 +30,12 @@ export default function Sidebar({
   onLogout
 }) {
   const filters = [
-    { id: 'all', label: 'All Tasks', icon: '📋', count: taskCounts.all },
-    { id: 'today', label: 'Due Today', icon: '☀️', count: taskCounts.today },
-    { id: 'upcoming', label: 'Upcoming', icon: '🗓️', count: taskCounts.upcoming },
-    { id: 'high', label: 'High Priority', icon: '🔥', count: taskCounts.high },
-    { id: 'overdue', label: 'Overdue', icon: '⚠️', count: taskCounts.overdue, isOverdue: true },
-    { id: 'completed', label: 'Completed', icon: '✅', count: taskCounts.completed }
+    { id: 'all', label: 'All Tasks', icon: <ClipboardIcon size={16} />, count: taskCounts.all },
+    { id: 'today', label: 'Due Today', icon: <SunIcon size={16} />, count: taskCounts.today },
+    { id: 'upcoming', label: 'Upcoming', icon: <CalendarIcon size={16} />, count: taskCounts.upcoming },
+    { id: 'high', label: 'High Priority', icon: <FlameIcon size={16} />, count: taskCounts.high },
+    { id: 'overdue', label: 'Overdue', icon: <AlertTriangleIcon size={16} />, count: taskCounts.overdue, isOverdue: true },
+    { id: 'completed', label: 'Completed', icon: <CheckCircleIcon size={16} />, count: taskCounts.completed }
   ];
 
   // Close sidebar on Escape and lock body scroll on mobile/tablet when open
@@ -63,7 +73,9 @@ export default function Sidebar({
         {/* Brand Header */}
         <div className="sidebar-brand">
           <div className="brand-logo-wrap">
-            <div className="brand-icon">⚡</div>
+            <div className="brand-icon">
+              <ZapIcon size={18} />
+            </div>
             <div className="brand-text">
               <div className="brand-name">
                 TaskFlow <span>PRO</span>
@@ -124,7 +136,8 @@ export default function Sidebar({
                 }}
                 title="Sign in or create account"
               >
-                {isCollapsed ? <span>🔑</span> : <span>🔑 Sign In / Register</span>}
+                <KeyIcon size={14} style={{ marginRight: isCollapsed ? 0 : 6 }} />
+                {!isCollapsed && <span>Sign In / Register</span>}
               </button>
             </div>
           ) : (
@@ -231,14 +244,6 @@ export default function Sidebar({
                 </svg>
               </button>
             </div>
-
-            {!isCollapsed && (
-              <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '10.5px', color: 'var(--text-tertiary, #64748b)' }}>
-                <a href="/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</a>
-                <span>•</span>
-                <a href="/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</a>
-              </div>
-            )}
           </div>
         </div>
       </aside>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ZapIcon, SearchIcon, BellIcon, RefreshCwIcon, PlusIcon, XIcon, LinkIcon, KeyIcon, MailIcon, LogOutIcon } from './Icons';
 
 export default function Header({
   currentFilter,
@@ -42,15 +43,6 @@ export default function Header({
     }
   }, [isProfileOpen]);
 
-  const filterTitles = {
-    all: 'All Tasks',
-    today: 'Due Today',
-    upcoming: 'Upcoming Deadlines',
-    high: 'High Priority Tasks',
-    overdue: 'Overdue Tasks',
-    completed: 'Completed Tasks'
-  };
-
   // Generate initials for the avatar
   const getInitials = (name) => {
     if (!name) return '?';
@@ -82,36 +74,30 @@ export default function Header({
 
   return (
     <header className="main-topbar">
-      {/* Mobile Menu & Title */}
-      <button
-        type="button"
-        className="mobile-menu-btn"
-        onClick={onOpenMobileMenu}
-        title="Open Navigation Menu"
-        aria-label="Open Navigation Menu"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
-
+      {/* Mobile Menu & Date Context */}
       <div className="topbar-context">
-        <div className="topbar-brand-badge" title="TaskFlow Pro Executive Suite">
-          <span className="topbar-brand-icon">⚡</span>
-          <span className="topbar-brand-title">TaskFlow <strong className="topbar-pro-pill">PRO</strong></span>
-        </div>
-        <span className="topbar-divider">/</span>
-        <span className="view-title">{filterTitles[currentFilter] || 'All Tasks'}</span>
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={onOpenMobileMenu}
+          title="Open Navigation Menu"
+          aria-label="Open Navigation Menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+
         <span className="date-badge">{currentDateText}</span>
       </div>
 
-      {/* Topbar Actions */}
+      {/* Flexible Topbar Actions */}
       <div className="topbar-actions">
         {/* Search */}
         <div className="topbar-search">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon"><SearchIcon size={14} /></span>
           <input
             type="text"
             placeholder="Search tasks..."
@@ -125,7 +111,7 @@ export default function Header({
               onClick={() => onSearchChange('')}
               title="Clear search"
             >
-              ✕
+              <XIcon size={12} />
             </button>
           )}
         </div>
@@ -137,8 +123,8 @@ export default function Header({
             value={currentSort}
             onChange={e => onSortChange(e.target.value)}
           >
-            <option value="deadline-asc">Deadline: Soonest first</option>
-            <option value="deadline-desc">Deadline: Latest first</option>
+            <option value="deadline-asc">Timeline: Soonest first</option>
+            <option value="deadline-desc">Timeline: Latest first</option>
             <option value="priority-desc">Priority: High to Low</option>
             <option value="created-desc">Recently Created</option>
             <option value="title-asc">Alphabetical (A-Z)</option>
@@ -152,7 +138,7 @@ export default function Header({
           onClick={onOpenSettings}
           title="Open Resend & Google Calendar Automation Settings"
         >
-          <span>⚡</span>
+          <ZapIcon size={16} />
           <span className="status-dot" />
         </button>
 
@@ -164,7 +150,7 @@ export default function Header({
           title="Test Audio Bell Chime & System Alert Notification (Click to Test)"
           style={{ position: 'relative' }}
         >
-          <span>🔔</span>
+          <BellIcon size={16} />
         </button>
 
         {/* Instant Refresh Button */}
@@ -182,9 +168,7 @@ export default function Header({
           title="Refresh Application (Hard Reload)"
           aria-label="Refresh Application"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-          </svg>
+          <RefreshCwIcon size={14} />
         </button>
 
         {/* User Account / Auth Actions */}
@@ -236,10 +220,7 @@ export default function Header({
                   }}
                   id="profile-connect-accounts-btn"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
+                  <LinkIcon size={16} />
                   <span>Connect Accounts &amp; Integrations</span>
                 </button>
 
@@ -252,10 +233,7 @@ export default function Header({
                   }}
                   id="profile-change-password-btn"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
+                  <KeyIcon size={16} />
                   <span>Change Password</span>
                 </button>
 
@@ -268,10 +246,7 @@ export default function Header({
                   }}
                   id="profile-reset-password-btn"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                  </svg>
+                  <MailIcon size={16} />
                   <span>Reset Password via Email</span>
                 </button>
 
@@ -286,11 +261,7 @@ export default function Header({
                   }}
                   id="profile-logout-btn"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
+                  <LogOutIcon size={16} />
                   <span>Log Out</span>
                 </button>
               </div>
@@ -315,7 +286,8 @@ export default function Header({
           onClick={onOpenNewTask}
           title="Add New Task (Shortcut: N)"
         >
-          <span>+ Add Task</span>
+          <PlusIcon size={13} style={{ marginRight: '4px' }} />
+          <span>Add Task</span>
         </button>
       </div>
     </header>

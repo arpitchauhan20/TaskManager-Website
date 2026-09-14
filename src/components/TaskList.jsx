@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import TaskRow from './TaskRow';
+import { ClipboardIcon, TargetIcon, PlusIcon } from './Icons';
 
 export default function TaskList({
   tasks,
@@ -24,7 +25,6 @@ export default function TaskList({
   };
 
   const pendingCount = tasks.filter(t => !t.completed).length;
-  const completedCount = tasks.filter(t => t.completed).length;
 
   return (
     <section className={`tasks-container dashboard-mini-card ${isOpen ? 'expanded' : 'collapsed'}`}>
@@ -39,7 +39,7 @@ export default function TaskList({
       >
         <div className="mini-card-lead">
           <div className="mini-card-icon-wrap task">
-            <span className="mini-card-emoji">📋</span>
+            <ClipboardIcon size={18} />
           </div>
           <div className="mini-card-info">
             <div className="mini-card-title-row">
@@ -71,7 +71,8 @@ export default function TaskList({
             }}
             title="Create a new task"
           >
-            <span>+ Add Task</span>
+            <PlusIcon size={13} style={{ marginRight: '4px' }} />
+            <span>Add Task</span>
           </button>
           <button
             type="button"
@@ -89,7 +90,7 @@ export default function TaskList({
           {tasks.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon-wrap">
-                <span className="empty-icon">🎯</span>
+                <TargetIcon size={32} style={{ color: 'var(--accent-light, #818cf8)' }} />
               </div>
               <h3 className="empty-title">
                 {currentFilter === 'completed'
@@ -109,7 +110,8 @@ export default function TaskList({
                 onClick={onOpenNewTask}
                 style={{ marginTop: '14px' }}
               >
-                + Create New Task
+                <PlusIcon size={13} style={{ marginRight: '4px' }} />
+                Create New Task
               </button>
             </div>
           ) : (

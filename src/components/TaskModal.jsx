@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { SoundFX } from '../services/soundEngine';
+import {
+  XIcon,
+  ClockIcon,
+  AlertTriangleIcon,
+  BellIcon,
+  VolumeIcon,
+  CalendarIcon,
+  MailIcon,
+  PlayIcon,
+  CheckIcon
+} from './Icons';
 
 export default function TaskModal({
   isOpen,
@@ -143,7 +154,7 @@ export default function TaskModal({
             <p className="modal-subtitle">Define deadline, priority, and smart reminder alerts</p>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose} title="Close" aria-label="Close">
-            ✕
+            <XIcon size={18} />
           </button>
         </div>
 
@@ -193,9 +204,9 @@ export default function TaskModal({
                   value={priority}
                   onChange={e => setPriority(e.target.value)}
                 >
-                  <option value="high">🔥 High Priority</option>
-                  <option value="medium">⚡ Medium Priority</option>
-                  <option value="low">🌱 Low Priority</option>
+                  <option value="high">High Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="low">Low Priority</option>
                 </select>
               </div>
             </div>
@@ -219,7 +230,9 @@ export default function TaskModal({
             <div className="reminder-card">
               <div className="reminder-header-row">
                 <div className="reminder-header-title">
-                  <span className="reminder-header-icon">⏰</span>
+                  <div className="reminder-header-icon-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}>
+                    <ClockIcon size={16} />
+                  </div>
                   <div>
                     <strong>Reminder &amp; Alerts</strong>
                     <div className="reminder-subtitle">Customize trigger timing and delivery channels</div>
@@ -323,7 +336,9 @@ export default function TaskModal({
               {/* Scheduled Trigger Banner */}
               {reminderMode !== 'none' && preview && (
                 <div className="reminder-preview-chip">
-                  <span className="reminder-preview-icon">{preview.isPast ? '⚠️' : '🔔'}</span>
+                  <span className="reminder-preview-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                    {preview.isPast ? <AlertTriangleIcon size={14} style={{ color: '#fb7185' }} /> : <BellIcon size={14} style={{ color: '#818cf8' }} />}
+                  </span>
                   <span>
                     {preview.isPast ? 'Selected time is in the past: ' : 'Alert triggers on: '}
                     <strong>{preview.formatted}</strong>
@@ -341,12 +356,16 @@ export default function TaskModal({
                       className={`channel-choice ${channels.push ? 'active' : ''}`}
                       onClick={() => toggleChannel('push')}
                     >
-                      <span className="channel-choice-icon">🔔</span>
+                      <div className="channel-choice-icon-wrap" style={{ color: 'var(--accent-light, #818cf8)' }}>
+                        <BellIcon size={18} />
+                      </div>
                       <div className="channel-choice-info">
                         <span className="channel-choice-name">Browser Push</span>
                         <span className="channel-choice-desc">Desktop &amp; mobile alerts</span>
                       </div>
-                      <span className="channel-check-mark">{channels.push ? '✓' : ''}</span>
+                      <span className="channel-check-mark">
+                        {channels.push && <CheckIcon size={14} />}
+                      </span>
                     </div>
 
                     {/* Sound */}
@@ -354,7 +373,9 @@ export default function TaskModal({
                       className={`channel-choice ${channels.sound ? 'active' : ''}`}
                       onClick={() => toggleChannel('sound')}
                     >
-                      <span className="channel-choice-icon">🔊</span>
+                      <div className="channel-choice-icon-wrap" style={{ color: 'var(--accent-light, #818cf8)' }}>
+                        <VolumeIcon size={18} />
+                      </div>
                       <div className="channel-choice-info">
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
                           <span className="channel-choice-name">Audio Bell</span>
@@ -367,12 +388,15 @@ export default function TaskModal({
                             }}
                             title="Test reminder chime"
                           >
-                            ▶ Test
+                            <PlayIcon size={9} style={{ marginRight: '3px' }} />
+                            Test
                           </button>
                         </div>
                         <span className="channel-choice-desc">Harmonic alert chime</span>
                       </div>
-                      <span className="channel-check-mark">{channels.sound ? '✓' : ''}</span>
+                      <span className="channel-check-mark">
+                        {channels.sound && <CheckIcon size={14} />}
+                      </span>
                     </div>
 
                     {/* Google Calendar */}
@@ -380,12 +404,16 @@ export default function TaskModal({
                       className={`channel-choice ${channels.calendar ? 'active' : ''}`}
                       onClick={() => toggleChannel('calendar')}
                     >
-                      <span className="channel-choice-icon">📅</span>
+                      <div className="channel-choice-icon-wrap" style={{ color: 'var(--accent-light, #818cf8)' }}>
+                        <CalendarIcon size={18} />
+                      </div>
                       <div className="channel-choice-info">
                         <span className="channel-choice-name">Google Calendar</span>
                         <span className="channel-choice-desc">Sync event (.ics invite)</span>
                       </div>
-                      <span className="channel-check-mark">{channels.calendar ? '✓' : ''}</span>
+                      <span className="channel-check-mark">
+                        {channels.calendar && <CheckIcon size={14} />}
+                      </span>
                     </div>
 
                     {/* Email */}
@@ -393,12 +421,16 @@ export default function TaskModal({
                       className={`channel-choice ${channels.email ? 'active' : ''}`}
                       onClick={() => toggleChannel('email')}
                     >
-                      <span className="channel-choice-icon">📧</span>
+                      <div className="channel-choice-icon-wrap" style={{ color: 'var(--accent-light, #818cf8)' }}>
+                        <MailIcon size={18} />
+                      </div>
                       <div className="channel-choice-info">
                         <span className="channel-choice-name">Email Alert</span>
                         <span className="channel-choice-desc">Automated email delivery</span>
                       </div>
-                      <span className="channel-check-mark">{channels.email ? '✓' : ''}</span>
+                      <span className="channel-check-mark">
+                        {channels.email && <CheckIcon size={14} />}
+                      </span>
                     </div>
                   </div>
 
@@ -409,12 +441,13 @@ export default function TaskModal({
                         Deliver Calendar &amp; Email To:
                       </label>
                       <div className="input-with-icon">
-                        <span className="input-icon">✉️</span>
+                        <MailIcon size={15} className="input-icon" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', position: 'absolute', color: 'var(--text-tertiary, #64748b)' }} />
                         <input
                           id="modal-reminder-email"
                           className="form-input"
                           type="email"
                           placeholder="e.g. yourname@gmail.com"
+                          style={{ paddingLeft: '36px' }}
                           value={reminderEmail}
                           onChange={e => setReminderEmail(e.target.value)}
                         />
@@ -433,11 +466,7 @@ export default function TaskModal({
             </button>
             <button type="submit" className="btn btn-primary" id="save-task-btn">
               <span>{taskToEdit ? 'Update Task' : 'Save Task'}</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                <polyline points="17 21 17 13 7 13 7 21" />
-                <polyline points="7 3 7 8 15 8" />
-              </svg>
+              <CheckIcon size={15} />
             </button>
           </div>
         </form>

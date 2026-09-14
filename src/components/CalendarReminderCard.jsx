@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import { createCalendarReminder } from '../services/calendarService';
+import {
+  CalendarIcon,
+  GlobeIcon,
+  CheckCircleIcon,
+  PlusIcon,
+  CheckIcon
+} from './Icons';
 
 export default function CalendarReminderCard({
   isCalendarConnected,
@@ -47,7 +54,7 @@ export default function CalendarReminderCard({
     if (e) e.stopPropagation();
     if (!currentUser) {
       if (onOpenAuthModal) onOpenAuthModal('login');
-      if (onShowToast) onShowToast('info', '🔒', 'Please sign in first to connect Google Calendar.');
+      if (onShowToast) onShowToast('info', 'lock', 'Please sign in first to connect Google Calendar.');
       return;
     }
     if (onConnectCalendar) {
@@ -58,18 +65,18 @@ export default function CalendarReminderCard({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
-      if (onShowToast) onShowToast('error', '⚠️', 'Please enter a reminder title.');
+      if (onShowToast) onShowToast('error', 'alert', 'Please enter a reminder title.');
       return;
     }
 
     if (!date || !time) {
-      if (onShowToast) onShowToast('error', '⚠️', 'Please select both date and time.');
+      if (onShowToast) onShowToast('error', 'alert', 'Please select both date and time.');
       return;
     }
 
     const startDateTime = new Date(`${date}T${time}:00`);
     if (isNaN(startDateTime.getTime())) {
-      if (onShowToast) onShowToast('error', '⚠️', 'Invalid date or time specified.');
+      if (onShowToast) onShowToast('error', 'alert', 'Invalid date or time specified.');
       return;
     }
 
@@ -89,14 +96,14 @@ export default function CalendarReminderCard({
       if (res.success && res.event) {
         setLastCreatedEvent(res.event);
         if (onShowToast) {
-          onShowToast('success', '📅', '✓ Added to Google Calendar');
+          onShowToast('success', 'calendar', 'Added to Google Calendar');
         }
       } else {
         throw new Error(res.error || 'Could not create reminder');
       }
     } catch (err) {
       if (onShowToast) {
-        onShowToast('error', '❌', err.message || 'Failed to create reminder in Google Calendar.');
+        onShowToast('error', 'alert', err.message || 'Failed to create reminder in Google Calendar.');
       }
     } finally {
       setIsSubmitting(false);
@@ -122,15 +129,18 @@ export default function CalendarReminderCard({
       >
         <div className="mini-card-lead">
           <div className="mini-card-icon-wrap">
-            <span className="mini-card-emoji">📅</span>
+            <CalendarIcon size={18} />
           </div>
           <div className="mini-card-info">
             <div className="mini-card-title-row">
               <h3 className="mini-card-title">Calendar Reminder</h3>
               <span className={`mini-card-badge ${isCalendarConnected ? 'connected' : ''}`}>
-                {isCalendarConnected ? '✓ GCal Linked' : 'GCal'}
+                {isCalendarConnected ? 'GCal Linked' : 'GCal'}
               </span>
-              <span className="mini-card-tz">🌐 {localTimeZone}</span>
+              <span className="mini-card-tz">
+                <GlobeIcon size={12} style={{ display: 'inline', verticalAlign: '-1px', marginRight: '4px' }} />
+                {localTimeZone}
+              </span>
             </div>
             <p className="mini-card-subtitle">
               {isExpanded
@@ -168,12 +178,7 @@ export default function CalendarReminderCard({
           {!isCalendarConnected ? (
             <div className="reminder-disconnected-box">
               <div className="disconnected-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
+                <CalendarIcon size={24} />
               </div>
               <div>
                 <h4 className="disconnected-card-heading">Connect Google Calendar</h4>
@@ -193,7 +198,7 @@ export default function CalendarReminderCard({
           ) : lastCreatedEvent ? (
             <div className="reminder-success-box">
               <div className="success-banner">
-                <span className="success-icon">✓</span>
+                <CheckCircleIcon size={18} className="success-icon" style={{ color: '#10b981' }} />
                 <span className="success-message">Added to Google Calendar!</span>
               </div>
 
@@ -213,7 +218,8 @@ export default function CalendarReminderCard({
                   className="btn btn-secondary btn-sm"
                   onClick={handleResetForm}
                 >
-                  + Create Another Reminder
+                  <PlusIcon size={14} style={{ marginRight: '4px' }} />
+                  Create Another Reminder
                 </button>
               </div>
             </div>
