@@ -180,7 +180,7 @@ class TaskStorage {
           deadline: row[4] || '',
           priority: row[5] || 'medium',
           category: row[6] || 'work',
-          completed: row[7] === 'true',
+          completed: String(row[7] || '').trim().toLowerCase() === 'true',
           tags: row[8] ? JSON.parse(row[8] || '[]') : [],
           reminder_time: row[9] || '',
           reminder_channel: row[10] || '',

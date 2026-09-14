@@ -87,6 +87,9 @@ export default function App() {
         setCurrentUser(user);
         if (user.name) setUserName(user.name);
         if (user.email) setReminderEmail(user.email);
+        if (user.google_calendar_connected) {
+          setIsCalendarConnected(true);
+        }
       }
     });
 
@@ -104,6 +107,9 @@ export default function App() {
   // Sync tasks from server / Google Sheets whenever authenticated user changes
   useEffect(() => {
     if (currentUser) {
+      if (currentUser.google_calendar_connected) {
+        setIsCalendarConnected(true);
+      }
       TaskClient.getTasks().then(serverTasks => {
         if (Array.isArray(serverTasks) && serverTasks.length > 0) {
           setTasks(serverTasks);
@@ -120,6 +126,9 @@ export default function App() {
     setCurrentUser(user);
     if (user.name) setUserName(user.name);
     if (user.email) setReminderEmail(user.email);
+    if (user.google_calendar_connected) {
+      setIsCalendarConnected(true);
+    }
     TaskClient.getTasks().then(serverTasks => {
       if (Array.isArray(serverTasks) && serverTasks.length > 0) {
         setTasks(serverTasks);
@@ -134,6 +143,7 @@ export default function App() {
   const handleLogout = async () => {
     await AuthClient.logout();
     setCurrentUser(null);
+    setIsCalendarConnected(false);
     showToast('info', '👋', 'You have been logged out.');
   };
 
@@ -158,8 +168,10 @@ export default function App() {
     }
 
     fetchCalendarStatus().then(connected => {
-      if (!isJustConnected || connected) {
-        setIsCalendarConnected(connected);
+      if (connected || isJustConnected) {
+        setIsCalendarConnected(true);
+      } else if (!currentUser?.google_calendar_connected) {
+        setIsCalendarConnected(false);
       }
     });
 

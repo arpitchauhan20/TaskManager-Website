@@ -181,7 +181,7 @@ class UserStorage {
           password_hash: row[3] || '',
           google_id: row[4] || '',
           google_refresh_token: row[5] || '',
-          google_calendar_connected: row[6] === 'true',
+          google_calendar_connected: String(row[6] || '').trim().toLowerCase() === 'true',
           reset_token_hash: row[7] || '',
           reset_token_expires_at: row[8] || '',
           created_at: row[9] || '',

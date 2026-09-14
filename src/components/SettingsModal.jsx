@@ -28,21 +28,22 @@ export default function SettingsModal({
   const [isTesting, setIsTesting] = useState(false);
 
   // Google Calendar OAuth state
-  const isConnected = externalConnected !== undefined ? externalConnected : isGoogleCalendarConnected();
-  const [gcalConnected, setGcalConnected] = useState(isConnected);
-  const [gcalEmail, setGcalEmail] = useState(() => getConnectedGoogleEmail());
+  const isInitialConnected = Boolean(externalConnected || currentUser?.google_calendar_connected);
+  const [gcalConnected, setGcalConnected] = useState(isInitialConnected);
+  const [gcalEmail, setGcalEmail] = useState(() => getConnectedGoogleEmail() || currentUser?.email || null);
   const [isConnectingGCal, setIsConnectingGCal] = useState(false);
   const [isTestingGCal, setIsTestingGCal] = useState(false);
 
   useEffect(() => {
     setName(userName || '');
     setEmail(reminderEmail || (currentUser?.email || ''));
-    if (externalConnected !== undefined) {
-      setGcalConnected(Boolean(externalConnected));
-    }
+    const isConn = Boolean(externalConnected || currentUser?.google_calendar_connected);
+    setGcalConnected(isConn);
     if (isOpen) {
       fetchCalendarStatus().then(connected => {
-        setGcalConnected(Boolean(connected));
+        if (connected || currentUser?.google_calendar_connected) {
+          setGcalConnected(true);
+        }
       });
     }
     setGcalEmail(getConnectedGoogleEmail() || currentUser?.email || null);
