@@ -12,7 +12,7 @@ import AuthModal from './components/AuthModal';
 import CalendarConnectionCard from './components/CalendarConnectionCard';
 import CalendarReminderCard from './components/CalendarReminderCard';
 import ToastContainer from './components/ToastContainer';
-import { ZapIcon, RefreshCwIcon } from './components/Icons';
+import { ZapIcon, RefreshCwIcon, CalendarIcon, ClipboardIcon } from './components/Icons';
 import { SoundFX } from './services/soundEngine';
 import { AuthClient } from './services/authClient';
 import { TaskClient } from './services/taskClient';
@@ -74,6 +74,7 @@ export default function App() {
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [taskToDeleteId, setTaskToDeleteId] = useState(null);
+  const [activeDashboardView, setActiveDashboardView] = useState('tasks'); // 'tasks' | 'calendar'
 
   // Authentication State
   const [currentUser, setCurrentUser] = useState(null);
@@ -882,53 +883,127 @@ export default function App() {
             }}
           />
 
-          {/* Direct Google Calendar Reminder Card (Compact, Click-to-Open) */}
-          <CalendarReminderCard
-            isCalendarConnected={isCalendarConnected}
-            isCalendarLoading={isCalendarLoading}
-            currentUser={currentUser}
-            onConnectCalendar={handleConnectCalendar}
-            onDisconnectCalendar={handleDisconnectCalendar}
-            onOpenAuthModal={handleOpenAuthModal}
-            onShowToast={showToast}
-          />
+          {/* Executive Two-Card Dashboard Switcher */}
+          <div className="dashboard-cards-grid">
+            {/* Card 1: Calendar Reminder */}
+            <div
+              className={`dashboard-module-card ${activeDashboardView === 'calendar' ? 'active' : ''}`}
+              onClick={() => setActiveDashboardView('calendar')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setActiveDashboardView('calendar')}
+            >
+              <div className="module-card-top">
+                <div className="module-card-icon-wrap cal">
+                  <CalendarIcon size={20} />
+                </div>
+                <div className="module-card-badges">
+                  <span className={`badge-status-pill ${isCalendarConnected ? 'active' : ''}`}>
+                    {isCalendarConnected ? '✓ Google Synced' : 'Offline'}
+                  </span>
+                  <span className="module-card-action-hint">
+                    {activeDashboardView === 'calendar' ? 'Active Dashboard' : 'Open Dashboard →'}
+                  </span>
+                </div>
+              </div>
+              <div className="module-card-body">
+                <h3 className="module-card-title">Calendar Reminder</h3>
+                <p className="module-card-desc">
+                  Schedule direct calendar events, alarm presets &amp; Google auto-sync
+                </p>
+              </div>
+            </div>
 
-          {/* Task Details & Workspace Card (Compact, Click-to-Open) */}
-          <TaskList
-            tasks={filteredTasks}
-            onToggleComplete={handleToggleComplete}
-            onEdit={id => {
-              const target = tasks.find(t => t.id === id);
-              if (target) {
-                setTaskToEdit(target);
-                setIsTaskModalOpen(true);
-              }
-            }}
-            onDelete={handleDeleteTask}
-            onSyncGoogleCalendar={handleSyncGoogleCalendar}
-            onDownloadICS={handleDownloadICS}
-            onSendEmail={handleSendEmail}
-            onOpenNewTask={() => {
-              setTaskToEdit(null);
-              setIsTaskModalOpen(true);
-            }}
-            currentFilter={currentFilter}
-          />
+            {/* Card 2: Task Details */}
+            <div
+              className={`dashboard-module-card ${activeDashboardView === 'tasks' ? 'active' : ''}`}
+              onClick={() => setActiveDashboardView('tasks')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setActiveDashboardView('tasks')}
+            >
+              <div className="module-card-top">
+                <div className="module-card-icon-wrap tasks">
+                  <ClipboardIcon size={20} />
+                </div>
+                <div className="module-card-badges">
+                  <span className="badge-count-pill">
+                    {taskCounts.all} Active
+                  </span>
+                  {taskCounts.today > 0 && (
+                    <span className="badge-status-pill" style={{ color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
+                      {taskCounts.today} Today
+                    </span>
+                  )}
+                  <span className="module-card-action-hint">
+                    {activeDashboardView === 'tasks' ? 'Active Dashboard' : 'Open Dashboard →'}
+                  </span>
+                </div>
+              </div>
+              <div className="module-card-body">
+                <h3 className="module-card-title">Task Details</h3>
+                <p className="module-card-desc">
+                  Manage active tasks, deadlines, priorities &amp; completion status
+                </p>
+              </div>
+            </div>
+          </div>
 
-          {/* Executive Footer with Branding and Legal Links for Google OAuth Verification (Compact Single Row) */}
+          {/* Respective UI Dashboard based on clicked card */}
+          {activeDashboardView === 'calendar' && (
+            <div className="dashboard-active-view-container animate-fade-in">
+              <CalendarReminderCard
+                isCalendarConnected={isCalendarConnected}
+                isCalendarLoading={isCalendarLoading}
+                currentUser={currentUser}
+                onConnectCalendar={handleConnectCalendar}
+                onDisconnectCalendar={handleDisconnectCalendar}
+                onOpenAuthModal={handleOpenAuthModal}
+                onShowToast={showToast}
+                initialExpanded={true}
+              />
+            </div>
+          )}
+
+          {activeDashboardView === 'tasks' && (
+            <div className="dashboard-active-view-container animate-fade-in">
+              <TaskList
+                tasks={filteredTasks}
+                onToggleComplete={handleToggleComplete}
+                onEdit={id => {
+                  const target = tasks.find(t => t.id === id);
+                  if (target) {
+                    setTaskToEdit(target);
+                    setIsTaskModalOpen(true);
+                  }
+                }}
+                onDelete={handleDeleteTask}
+                onSyncGoogleCalendar={handleSyncGoogleCalendar}
+                onDownloadICS={handleDownloadICS}
+                onSendEmail={handleSendEmail}
+                onOpenNewTask={() => {
+                  setTaskToEdit(null);
+                  setIsTaskModalOpen(true);
+                }}
+                currentFilter={currentFilter}
+              />
+            </div>
+          )}
+
+          {/* Executive Footer with Branding and Legal Links for Google OAuth Verification (Ultra-Thin Sleek Strip) */}
           <footer className="app-main-footer">
             <div className="footer-compact-row">
               <div className="footer-brand-mini">
-                <ZapIcon size={13} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-1px', color: '#818cf8', marginRight: '4px' }} />
+                <ZapIcon size={12} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-1px', color: '#818cf8', marginRight: '3px' }} />
                 <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
                 <span className="footer-tagline">Executive Task &amp; Calendar</span>
               </div>
               <div className="footer-links-mini">
-                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
                 <span className="footer-dot">•</span>
-                <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+                <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
                 <span className="footer-dot">•</span>
-                <a href="mailto:arpitchauhan5586@gmail.com">Contact Support</a>
+                <a href="mailto:arpitchauhan5586@gmail.com">Support</a>
                 <span className="footer-dot">•</span>
                 <span className="footer-copyright">© {new Date().getFullYear()} TaskFlow Pro</span>
               </div>

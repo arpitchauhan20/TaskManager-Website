@@ -84,9 +84,9 @@ export default function TaskList({
         </div>
       </div>
 
-      {/* Expanded Content Area */}
+      {/* Expanded Content Area with Smooth Tab Transition */}
       {isOpen && (
-        <div className="mini-card-body">
+        <div className="mini-card-body tab-view-animated" key={currentFilter}>
           {tasks.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon-wrap">

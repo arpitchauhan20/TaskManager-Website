@@ -15,9 +15,10 @@ export default function CalendarReminderCard({
   onConnectCalendar,
   onDisconnectCalendar,
   onOpenAuthModal,
-  onShowToast
+  onShowToast,
+  initialExpanded = true
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(initialExpanded);
 
   // Form State
   const [title, setTitle] = useState('');

@@ -230,41 +230,45 @@ export default function SettingsModal({
               <span className="settings-section-heading">APPEARANCE &amp; SOUND</span>
             </div>
 
-            {/* 1. Theme Color Selector Card */}
-            <div className="settings-card-section" style={{ marginBottom: '12px' }}>
-              <div style={{ marginBottom: '8px' }}>
-                <strong className="settings-card-title">Color Theme</strong>
-                <div className="settings-card-desc">Personalize your workspace palette</div>
+            {/* Unified Appearance & Sound Card */}
+            <div className="settings-card-section">
+              {/* 1. Theme Color Selector */}
+              <div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong className="settings-card-title">Color Theme</strong>
+                  <div className="settings-card-desc">Personalize your workspace palette</div>
+                </div>
+                <div className="settings-theme-grid">
+                  {[
+                    { id: 'indigo', label: 'Obsidian Indigo', color: '#6366f1', bg: '#080b11' },
+                    { id: 'emerald', label: 'Emerald Forest', color: '#10b981', bg: '#06130e' },
+                    { id: 'cyan', label: 'Midnight Cyan', color: '#06b6d4', bg: '#051119' },
+                    { id: 'light', label: 'Studio Light', color: '#4f46e5', bg: '#f8fafc' }
+                  ].map(theme => (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      className={`settings-theme-option ${currentPalette === theme.id ? 'active' : ''}`}
+                      onClick={() => onChangePalette && onChangePalette(theme.id)}
+                    >
+                      <div className="theme-option-preview" style={{ background: theme.bg }}>
+                        <div className="theme-option-accent" style={{ background: theme.color }} />
+                      </div>
+                      <span className="theme-option-name">{theme.label}</span>
+                      {currentPalette === theme.id && (
+                        <span className="theme-option-check">
+                          <CheckIcon size={13} />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="settings-theme-grid">
-                {[
-                  { id: 'indigo', label: 'Obsidian Indigo', color: '#6366f1', bg: '#080b11' },
-                  { id: 'emerald', label: 'Emerald Forest', color: '#10b981', bg: '#06130e' },
-                  { id: 'cyan', label: 'Midnight Cyan', color: '#06b6d4', bg: '#051119' },
-                  { id: 'light', label: 'Studio Light', color: '#4f46e5', bg: '#f8fafc' }
-                ].map(theme => (
-                  <button
-                    key={theme.id}
-                    type="button"
-                    className={`settings-theme-option ${currentPalette === theme.id ? 'active' : ''}`}
-                    onClick={() => onChangePalette && onChangePalette(theme.id)}
-                  >
-                    <div className="theme-option-preview" style={{ background: theme.bg }}>
-                      <div className="theme-option-accent" style={{ background: theme.color }} />
-                    </div>
-                    <span className="theme-option-name">{theme.label}</span>
-                    {currentPalette === theme.id && (
-                      <span className="theme-option-check">
-                        <CheckIcon size={13} />
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            {/* 2. Sound & Alerts Card with Toggle Button */}
-            <div className="settings-card-section sound-card-section" style={{ marginBottom: '12px' }}>
+              {/* Inner Divider */}
+              <div className="settings-card-inner-divider" />
+
+              {/* 2. Sound & Alerts with Toggle Switch */}
               <div className="settings-sound-row">
                 <div style={{ flex: 1, minWidth: '200px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -304,85 +308,91 @@ export default function SettingsModal({
               <span className="settings-section-heading">CONNECT WITH</span>
             </div>
 
-            {/* 1. Google Calendar Integration Card */}
-            <div className="settings-card-section gcal-card-section">
-              <div className="settings-card-header">
-                <div className="settings-card-icon-wrap cal">
-                  <CalendarIcon size={20} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong className="settings-card-title">Google Calendar</strong>
-                  <div className="settings-card-desc">
-                    {gcalConnected
-                      ? `Connected (${gcalEmail || 'Active Session'}) | 1-click & background auto-sync active`
-                      : 'Connect your Google account to sync scheduled tasks and reminders'}
+            {/* Unified Integrations Card */}
+            <div className="settings-card-section">
+              {/* 1. Google Calendar Integration */}
+              <div className="settings-sub-section">
+                <div className="settings-card-header">
+                  <div className="settings-card-icon-wrap cal">
+                    <CalendarIcon size={20} />
                   </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong className="settings-card-title">Google Calendar</strong>
+                    <div className="settings-card-desc">
+                      {gcalConnected
+                        ? `Connected (${gcalEmail || 'Active Session'}) | 1-click & background auto-sync active`
+                        : 'Connect your Google account to sync scheduled tasks and reminders'}
+                    </div>
+                  </div>
+                  <span className={`badge-status-pill ${gcalConnected ? 'active' : ''}`}>
+                    {gcalConnected ? '✓ Connected' : 'Disconnected'}
+                  </span>
                 </div>
-                <span className={`badge-status-pill ${gcalConnected ? 'active' : ''}`}>
-                  {gcalConnected ? '✓ Connected' : 'Disconnected'}
-                </span>
-              </div>
 
-              <div className="btn-group-row" style={{ marginTop: '12px', justifyContent: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
-                {!gcalConnected ? (
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    onClick={handleConnectGoogle}
-                    disabled={isConnectingGCal || isCalendarLoading}
-                  >
-                    <LinkIcon size={14} style={{ marginRight: '4px' }} />
-                    <span>{isConnectingGCal || isCalendarLoading ? 'Connecting...' : 'Connect Google Calendar'}</span>
-                  </button>
-                ) : (
-                  <>
+                <div className="btn-group-row" style={{ marginTop: '12px', justifyContent: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
+                  {!gcalConnected ? (
                     <button
                       type="button"
                       className="btn btn-primary btn-sm"
-                      onClick={handleTestGoogleCalendar}
-                      disabled={isTestingGCal}
+                      onClick={handleConnectGoogle}
+                      disabled={isConnectingGCal || isCalendarLoading}
                     >
-                      <ZapIcon size={13} style={{ marginRight: '4px' }} />
-                      <span>{isTestingGCal ? 'Saving...' : 'Test Calendar Sync'}</span>
+                      <LinkIcon size={14} style={{ marginRight: '4px' }} />
+                      <span>{isConnectingGCal || isCalendarLoading ? 'Connecting...' : 'Connect Google Calendar'}</span>
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={handleDisconnectGoogle}
-                      style={{ color: '#f43f5e' }}
-                    >
-                      Disconnect
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* 2. Automated Resend Email Dispatcher */}
-            <div className="settings-card-section email-card-section" style={{ marginTop: '12px' }}>
-              <div className="settings-card-header">
-                <div className="settings-card-icon-wrap email">
-                  <MailIcon size={20} />
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={handleTestGoogleCalendar}
+                        disabled={isTestingGCal}
+                      >
+                        <ZapIcon size={13} style={{ marginRight: '4px' }} />
+                        <span>{isTestingGCal ? 'Saving...' : 'Test Calendar Sync'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleDisconnectGoogle}
+                        style={{ color: '#f43f5e' }}
+                      >
+                        Disconnect
+                      </button>
+                    </>
+                  )}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong className="settings-card-title">Resend Email &amp; Calendar Invites</strong>
-                  <div className="settings-card-desc">Delivers instant task notifications &amp; calendar invite attachments over Port 443</div>
-                </div>
-                <span className="badge-status-pill active" id="email-cfg-badge">
-                  Active (Port 443)
-                </span>
               </div>
 
-              <div className="btn-group-row" style={{ marginTop: '10px' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={handleTestEmail}
-                  disabled={isTesting}
-                >
-                  <ZapIcon size={13} style={{ marginRight: '4px' }} />
-                  <span>{isTesting ? 'Dispatching...' : 'Send Test Email & Invite'}</span>
-                </button>
+              {/* Inner Divider */}
+              <div className="settings-card-inner-divider" />
+
+              {/* 2. Automated Resend Email Dispatcher */}
+              <div className="settings-sub-section">
+                <div className="settings-card-header">
+                  <div className="settings-card-icon-wrap email">
+                    <MailIcon size={20} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong className="settings-card-title">Resend Email &amp; Calendar Invites</strong>
+                    <div className="settings-card-desc">Delivers instant task notifications &amp; calendar invite attachments over Port 443</div>
+                  </div>
+                  <span className="badge-status-pill active" id="email-cfg-badge">
+                    Active (Port 443)
+                  </span>
+                </div>
+
+                <div className="btn-group-row" style={{ marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleTestEmail}
+                    disabled={isTesting}
+                  >
+                    <ZapIcon size={13} style={{ marginRight: '4px' }} />
+                    <span>{isTesting ? 'Dispatching...' : 'Send Test Email & Invite'}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
