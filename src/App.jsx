@@ -12,7 +12,7 @@ import AuthModal from './components/AuthModal';
 import CalendarConnectionCard from './components/CalendarConnectionCard';
 import CalendarReminderCard from './components/CalendarReminderCard';
 import ToastContainer from './components/ToastContainer';
-import { ZapIcon, RefreshCwIcon, CalendarIcon, ClipboardIcon } from './components/Icons';
+import { ZapIcon, RefreshCwIcon, CalendarIcon, ClipboardIcon, ArrowLeftIcon } from './components/Icons';
 import { SoundFX } from './services/soundEngine';
 import { AuthClient } from './services/authClient';
 import { TaskClient } from './services/taskClient';
@@ -867,90 +867,106 @@ export default function App() {
             </div>
           )}
           {/* Canvas Hero & Metrics Strip */}
-          <StatCards
-            userName={userName}
-            stats={stats}
-            currentFilter={currentFilter}
-            onSelectFilter={setCurrentFilter}
-          />
+          {/* Condition 1: Overview Mode (No specific board opened) */}
+          {activeDashboardBoard === null && (
+            <div className="dashboard-overview-container tab-view-animated">
+              {/* Canvas Hero & Metrics Strip */}
+              <StatCards
+                userName={userName}
+                stats={stats}
+                currentFilter={currentFilter}
+                onSelectFilter={(filter) => {
+                  setCurrentFilter(filter);
+                  setActiveDashboardBoard('tasks');
+                }}
+              />
 
-          {/* Quick Inline Task Bar */}
-          <QuickTaskBar
-            onQuickAdd={handleQuickAdd}
-            onOpenDetailedModal={() => {
-              setTaskToEdit(null);
-              setIsTaskModalOpen(true);
-            }}
-          />
+              {/* Two Executive Cards Grid */}
+              <div className="dashboard-cards-grid">
+                {/* Card 1: Calendar Reminder */}
+                <div className="dashboard-module-card">
+                  <div className="module-card-top">
+                    <div className="module-card-lead-badge-group">
+                      <div className="module-card-icon-wrap cal">
+                        <CalendarIcon size={20} />
+                      </div>
+                      <div className="module-card-status-badges">
+                        <span className={`badge-status-pill ${isCalendarConnected ? 'active' : ''}`}>
+                          {isCalendarConnected ? '✓ Google Synced' : 'Offline'}
+                        </span>
+                        <span className="badge-tz-pill">
+                          <GlobeIcon size={11} style={{ marginRight: '3px', verticalAlign: '-1px' }} />
+                          {typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-          {/* Executive Two-Card Dashboard Switcher */}
-          <div className="dashboard-cards-grid">
-            {/* Card 1: Calendar Reminder */}
-            <div
-              className={`dashboard-module-card ${activeDashboardView === 'calendar' ? 'active' : ''}`}
-              onClick={() => setActiveDashboardView('calendar')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setActiveDashboardView('calendar')}
-            >
-              <div className="module-card-top">
-                <div className="module-card-icon-wrap cal">
-                  <CalendarIcon size={20} />
+                  <div className="module-card-body">
+                    <h3 className="module-card-title">Calendar Reminder</h3>
+                    <p className="module-card-desc">
+                      Schedule direct calendar events, alarm presets &amp; automated Google Calendar sync
+                    </p>
+                  </div>
+
+                  {/* Centered Prominent Open Dashboard Button */}
+                  <div className="module-card-center-action">
+                    <button
+                      type="button"
+                      className="btn btn-primary module-open-btn"
+                      onClick={() => setActiveDashboardBoard('calendar')}
+                      title="Open Calendar Reminder Suite"
+                    >
+                      <span>Open Dashboard →</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="module-card-badges">
-                  <span className={`badge-status-pill ${isCalendarConnected ? 'active' : ''}`}>
-                    {isCalendarConnected ? '✓ Google Synced' : 'Offline'}
-                  </span>
-                  <span className="module-card-action-hint">
-                    {activeDashboardView === 'calendar' ? 'Active Dashboard' : 'Open Dashboard →'}
-                  </span>
+
+                {/* Card 2: Task Details */}
+                <div className="dashboard-module-card">
+                  <div className="module-card-top">
+                    <div className="module-card-lead-badge-group">
+                      <div className="module-card-icon-wrap tasks">
+                        <ClipboardIcon size={20} />
+                      </div>
+                      <div className="module-card-status-badges">
+                        <span className="badge-count-pill">
+                          {taskCounts.all} Active
+                        </span>
+                        {taskCounts.today > 0 && (
+                          <span className="badge-status-pill" style={{ color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
+                            {taskCounts.today} Today
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="module-card-body">
+                    <h3 className="module-card-title">Task Details</h3>
+                    <p className="module-card-desc">
+                      Manage active tasks, deadlines, priorities &amp; automated completion tracking
+                    </p>
+                  </div>
+
+                  {/* Centered Prominent Open Dashboard Button */}
+                  <div className="module-card-center-action">
+                    <button
+                      type="button"
+                      className="btn btn-primary module-open-btn"
+                      onClick={() => setActiveDashboardBoard('tasks')}
+                      title="Open Task Details Workspace"
+                    >
+                      <span>Open Dashboard →</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="module-card-body">
-                <h3 className="module-card-title">Calendar Reminder</h3>
-                <p className="module-card-desc">
-                  Schedule direct calendar events, alarm presets &amp; Google auto-sync
-                </p>
               </div>
             </div>
+          )}
 
-            {/* Card 2: Task Details */}
-            <div
-              className={`dashboard-module-card ${activeDashboardView === 'tasks' ? 'active' : ''}`}
-              onClick={() => setActiveDashboardView('tasks')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setActiveDashboardView('tasks')}
-            >
-              <div className="module-card-top">
-                <div className="module-card-icon-wrap tasks">
-                  <ClipboardIcon size={20} />
-                </div>
-                <div className="module-card-badges">
-                  <span className="badge-count-pill">
-                    {taskCounts.all} Active
-                  </span>
-                  {taskCounts.today > 0 && (
-                    <span className="badge-status-pill" style={{ color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
-                      {taskCounts.today} Today
-                    </span>
-                  )}
-                  <span className="module-card-action-hint">
-                    {activeDashboardView === 'tasks' ? 'Active Dashboard' : 'Open Dashboard →'}
-                  </span>
-                </div>
-              </div>
-              <div className="module-card-body">
-                <h3 className="module-card-title">Task Details</h3>
-                <p className="module-card-desc">
-                  Manage active tasks, deadlines, priorities &amp; completion status
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Respective UI Dashboard based on clicked card */}
-          {activeDashboardView === 'calendar' && (
+          {/* Condition 2: Calendar Reminder Dedicated Board */}
+          {activeDashboardBoard === 'calendar' && (
             <div className="dashboard-active-view-container animate-fade-in">
               <CalendarReminderCard
                 isCalendarConnected={isCalendarConnected}
@@ -960,13 +976,57 @@ export default function App() {
                 onDisconnectCalendar={handleDisconnectCalendar}
                 onOpenAuthModal={handleOpenAuthModal}
                 onShowToast={showToast}
-                initialExpanded={true}
+                onBack={() => setActiveDashboardBoard(null)}
+                tasks={tasks}
               />
             </div>
           )}
 
-          {activeDashboardView === 'tasks' && (
-            <div className="dashboard-active-view-container animate-fade-in">
+          {/* Condition 3: Task Details Dedicated Board (With Quick Task Bar inside) */}
+          {activeDashboardBoard === 'tasks' && (
+            <div className="task-board-wrapper tab-view-animated">
+              {/* Task Board Header with Back Button */}
+              <div className="board-top-header">
+                <div className="board-header-left">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm board-back-btn"
+                    onClick={() => setActiveDashboardBoard(null)}
+                    title="Back to Executive Overview"
+                  >
+                    <ArrowLeftIcon size={14} style={{ marginRight: '6px' }} />
+                    <span>Back to Overview</span>
+                  </button>
+                  <div className="board-title-group">
+                    <h2 className="board-main-title">Task Details &amp; Workspace</h2>
+                    <p className="board-sub-title">Manage active tasks, priorities, deadlines &amp; automated reminders</p>
+                  </div>
+                </div>
+
+                <div className="board-header-right">
+                  <span className="badge-count-pill">
+                    {taskCounts.all} Active Tasks
+                  </span>
+                  {taskCounts.today > 0 && (
+                    <span className="badge-status-pill" style={{ color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
+                      {taskCounts.today} Due Today
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Task Bar Placed Inside the Task Details Board */}
+              <div style={{ marginBottom: '16px' }}>
+                <QuickTaskBar
+                  onQuickAdd={handleQuickAdd}
+                  onOpenDetailedModal={() => {
+                    setTaskToEdit(null);
+                    setIsTaskModalOpen(true);
+                  }}
+                />
+              </div>
+
+              {/* Task Details List */}
               <TaskList
                 tasks={filteredTasks}
                 onToggleComplete={handleToggleComplete}
@@ -989,27 +1049,27 @@ export default function App() {
               />
             </div>
           )}
-
-          {/* Executive Footer with Branding and Legal Links for Google OAuth Verification (Ultra-Thin Sleek Strip) */}
-          <footer className="app-main-footer">
-            <div className="footer-compact-row">
-              <div className="footer-brand-mini">
-                <ZapIcon size={12} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-1px', color: '#818cf8', marginRight: '3px' }} />
-                <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
-                <span className="footer-tagline">Executive Task &amp; Calendar</span>
-              </div>
-              <div className="footer-links-mini">
-                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
-                <span className="footer-dot">•</span>
-                <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
-                <span className="footer-dot">•</span>
-                <a href="mailto:arpitchauhan5586@gmail.com">Support</a>
-                <span className="footer-dot">•</span>
-                <span className="footer-copyright">© {new Date().getFullYear()} TaskFlow Pro</span>
-              </div>
-            </div>
-          </footer>
         </div>
+
+        {/* Fixed Bottom Navigation Bar Strip (Docked at the bottom like top navigation bar) */}
+        <footer className="app-main-footer">
+          <div className="footer-compact-row">
+            <div className="footer-brand-mini">
+              <ZapIcon size={13} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-1px', color: 'var(--accent-light, #818cf8)', marginRight: '4px' }} />
+              <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
+              <span className="footer-tagline">Executive Task &amp; Calendar</span>
+            </div>
+            <div className="footer-links-mini">
+              <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              <span className="footer-dot">•</span>
+              <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+              <span className="footer-dot">•</span>
+              <a href="mailto:arpitchauhan5586@gmail.com">Contact Support</a>
+              <span className="footer-dot">•</span>
+              <span className="footer-copyright">© {new Date().getFullYear()} TaskFlow Pro</span>
+            </div>
+          </div>
+        </footer>
       </main>
 
       {/* Modals */}

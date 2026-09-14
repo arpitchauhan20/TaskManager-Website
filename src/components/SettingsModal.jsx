@@ -241,9 +241,9 @@ export default function SettingsModal({
                 <div className="settings-theme-grid">
                   {[
                     { id: 'indigo', label: 'Obsidian Indigo', color: '#6366f1', bg: '#080b11' },
-                    { id: 'emerald', label: 'Emerald Forest', color: '#10b981', bg: '#06130e' },
-                    { id: 'cyan', label: 'Midnight Cyan', color: '#06b6d4', bg: '#051119' },
-                    { id: 'light', label: 'Studio Light', color: '#4f46e5', bg: '#f8fafc' }
+                    { id: 'emerald', label: 'Emerald Forest', color: '#10b981', bg: '#050d09' },
+                    { id: 'cyan', label: 'Midnight Cyan', color: '#00bcd4', bg: '#060b13' },
+                    { id: 'violet', label: 'Nebula Violet', color: '#a855f7', bg: '#0a0614' }
                   ].map(theme => (
                     <button
                       key={theme.id}
