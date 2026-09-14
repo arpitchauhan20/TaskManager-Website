@@ -925,7 +925,7 @@ export default function App() {
               <div className="footer-brand">
                 <ZapIcon size={16} className="footer-icon" style={{ display: 'inline-block', verticalAlign: '-2px', color: '#818cf8', marginRight: '6px' }} />
                 <span className="footer-name">TaskFlow <strong className="footer-pro-pill">PRO</strong></span>
-                <span className="footer-tagline">— Executive Task &amp; Calendar Management</span>
+                <span className="footer-tagline">Executive Task &amp; Calendar Management</span>
               </div>
               <div className="footer-links">
                 <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>

@@ -1051,7 +1051,7 @@ function renderTaskCard(task) {
 function renderEmptyState() {
   const configs = {
     all:       { icon: '📋', title: 'No tasks scheduled', desc: 'Click "+ New Task" to start organizing your day' },
-    active:    { icon: '🎯', title: 'All caught up!',     desc: 'No active tasks pending — enjoy the momentum' },
+    active:    { icon: '🎯', title: 'All caught up!',     desc: 'No active tasks pending. Enjoy the momentum' },
     today:     { icon: '☀️', title: 'Clear day ahead',     desc: 'No tasks with deadlines scheduled for today' },
     completed: { icon: '🏆', title: 'No completed tasks', desc: 'Finish tasks to see your completed archive here' },
     overdue:   { icon: '✨', title: 'Zero overdue tasks', desc: 'You are completely on track with all deadlines' }

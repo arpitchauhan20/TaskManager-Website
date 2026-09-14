@@ -215,7 +215,7 @@ module.exports = async function handler(req, res) {
     const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: [targetRecipient],
-      subject: isTest ? '✅ TaskFlow Pro — Live Resend & Google Calendar Test' : `⏰ Task Reminder: ${taskObj.title} [TaskFlow]`,
+      subject: isTest ? 'TaskFlow Pro: Live Resend & Google Calendar Test' : `Task Reminder: ${taskObj.title} [TaskFlow]`,
       html,
       attachments: [
         {

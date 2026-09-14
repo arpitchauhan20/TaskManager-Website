@@ -388,7 +388,7 @@ async function sendAutomatedEmail(recipient, task, isTest = false) {
       const { data, error } = await resendClient.emails.send({
         from: FROM_EMAIL,
         to: [targetRecipient],
-        subject: isTest ? '✅ TaskFlow Pro — Email & Google Calendar Test' : `⏰ Task Reminder: ${task.title} [TaskFlow]`,
+        subject: isTest ? 'TaskFlow Pro: Email & Google Calendar Test' : `Task Reminder: ${task.title} [TaskFlow]`,
         html: emailHtml,
         attachments: [
           {
@@ -422,7 +422,7 @@ async function sendAutomatedEmail(recipient, task, isTest = false) {
   const mailOptions = {
     from: fromAddress,
     to: targetRecipient,
-    subject: isTest ? '✅ TaskFlow Pro — Email & Google Calendar Test' : `⏰ Task Reminder: ${task.title} [TaskFlow]`,
+    subject: isTest ? 'TaskFlow Pro: Email & Google Calendar Test' : `Task Reminder: ${task.title} [TaskFlow]`,
     text: `TaskFlow Reminder\n\nTask: ${task.title}\nDeadline: ${deadlineStr}\nPriority: ${priorityStr}\nSet on Google Calendar: ${gcalUrl}`,
     html: emailHtml,
     attachments: [
@@ -601,7 +601,7 @@ app.post('/api/test-email', async (req, res) => {
 
   const testTask = {
     taskId: 'test_invite_' + Date.now(),
-    title: 'TaskFlow Pro — Live Integration Test',
+    title: 'TaskFlow Pro: Live Integration Test',
     description: 'This is an automated test confirming that TaskFlow Pro can deliver emails directly to your Gmail and automatically add events to your Google Calendar.',
     deadline: new Date(Date.now() + 2 * 3600000).toISOString(),
     priority: 'high'

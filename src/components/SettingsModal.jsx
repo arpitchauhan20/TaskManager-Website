@@ -83,7 +83,7 @@ export default function SettingsModal({
 
     const res = await sendTaskEmail({
       recipient: target,
-      title: 'TaskFlow Pro — Live Integration Test',
+      title: 'TaskFlow Pro - Live Integration Test',
       description: 'This automated test confirms that TaskFlow Pro can deliver emails directly via Resend HTTPS (Port 443) and automatically add events to Google Calendar.',
       deadline: new Date(Date.now() + 2 * 3600000).toISOString(),
       priority: 'high',
@@ -219,7 +219,7 @@ export default function SettingsModal({
                 <strong className="settings-card-title">Google Calendar</strong>
                 <div className="settings-card-desc">
                   {gcalConnected
-                    ? `Connected (${gcalEmail || 'Active Session'}) — 1-click & background auto-sync active`
+                    ? `Connected (${gcalEmail || 'Active Session'}) | 1-click & background auto-sync active`
                     : 'Connect your Google account to sync scheduled tasks and reminders'}
                 </div>
               </div>

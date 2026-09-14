@@ -59,7 +59,7 @@ class EmailService {
             ⚠️ This link will expire in <strong>15 minutes</strong> and can only be used once.
           </p>
           <p style="font-size: 12px; color: #64748b; line-height: 1.5;">
-            If you did not request this password reset, you can safely ignore this email — your account remains secure.
+            If you did not request this password reset, you can safely ignore this email. Your account remains secure.
           </p>
           <hr style="border: none; border-top: 1px solid #1e293b; margin: 24px 0 16px 0;" />
           <p style="font-size: 11px; color: #475569; word-break: break-all;">

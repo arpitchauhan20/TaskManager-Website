@@ -97,7 +97,7 @@ export default function TaskList({
                   ? 'No completed tasks yet'
                   : currentFilter === 'overdue'
                   ? 'No overdue tasks! You are on top of everything.'
-                  : 'Clear horizon — no tasks found'}
+                  : 'Clear horizon: no tasks found'}
               </h3>
               <p className="empty-subtitle">
                 {currentFilter === 'all'
