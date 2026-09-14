@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://task-manager-website-psi.vercel.app/sitemap.xml
