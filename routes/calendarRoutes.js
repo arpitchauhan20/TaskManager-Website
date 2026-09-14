@@ -154,7 +154,7 @@ router.get(['/api/calendar/status', '/status'], async (req, res) => {
     }
 
     // Verify token validity with Google
-    const tokenCheck = await googleCalendarService.validateUserCalendarToken(user);
+    const tokenCheck = await googleCalendarService.validateUserCalendarToken(user, req);
     if (!tokenCheck.connected) {
       return res.status(200).json({
         connected: false,

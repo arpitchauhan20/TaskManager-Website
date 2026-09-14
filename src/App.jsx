@@ -148,18 +148,25 @@ export default function App() {
 
   // Sync Google Calendar connection status and handle OAuth callback redirects
   useEffect(() => {
+    const isJustConnected = typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('calendar_connected') === 'true';
+
+    if (isJustConnected) {
+      setIsCalendarConnected(true);
+      showToast('success', '📅', 'Google Calendar connected successfully!');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     fetchCalendarStatus().then(connected => {
-      setIsCalendarConnected(connected);
+      if (!isJustConnected || connected) {
+        setIsCalendarConnected(connected);
+      }
     });
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('calendar_connected') === 'true') {
-        setIsCalendarConnected(true);
-        showToast('success', '📅', 'Google Calendar connected successfully!');
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else if (params.get('calendar_error')) {
-        const err = params.get('calendar_error');
+      const err = params.get('calendar_error');
+      if (err) {
         if (err === 'login_required') {
           handleOpenAuthModal('login');
           showToast('info', '🔒', 'Please sign in or create an account before connecting Google Calendar.');

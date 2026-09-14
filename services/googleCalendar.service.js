@@ -174,36 +174,44 @@ class GoogleCalendarService {
 
   /**
    * Validates user refresh token and checks if authorization is active.
-   * If revoked or expired, automatically marks disconnected in storage.
+   * Only clears credentials if Google explicitly returns invalid_grant (revocation).
    */
-  async validateUserCalendarToken(user) {
+  async validateUserCalendarToken(user, req = null) {
     if (!user || !user.google_refresh_token) {
       return { connected: false };
     }
 
-    const oauth2Client = this.getOAuth2Client();
     const cleanToken = decryptToken(user.google_refresh_token);
-    oauth2Client.setCredentials({
-      refresh_token: cleanToken
-    });
+    if (!cleanToken) {
+      return { connected: false };
+    }
 
     try {
+      const oauth2Client = this.getOAuth2Client(req);
+      oauth2Client.setCredentials({
+        refresh_token: cleanToken
+      });
+
       const { token } = await oauth2Client.getAccessToken();
       if (token) {
         return { connected: true, accessToken: token };
       }
       return { connected: false };
     } catch (err) {
-      console.warn(`[GoogleCalendarService] Authorization invalid for user ${user.id}:`, err.message);
-      // Mark disconnected gracefully without crashing
-      await userStorage.updateUser(user.id, {
-        google_calendar_connected: false,
-        google_refresh_token: ''
-      });
-      return {
-        connected: false,
-        error: 'Google Calendar authorization has been revoked or expired. Please reconnect.'
-      };
+      console.warn(`[GoogleCalendarService] Token verification check for user ${user.id}:`, err.message);
+      // Only wipe credentials if explicitly revoked by the user in Google Security settings
+      if (err.message && err.message.includes('invalid_grant')) {
+        await userStorage.updateUser(user.id, {
+          google_calendar_connected: false,
+          google_refresh_token: ''
+        });
+        return {
+          connected: false,
+          error: 'Google Calendar authorization has been revoked. Please reconnect.'
+        };
+      }
+      // For network blips or cold-start timeouts, maintain connected status if user has saved refresh token
+      return { connected: true };
     }
   }
 

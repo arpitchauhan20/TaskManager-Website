@@ -37,8 +37,15 @@ export default function SettingsModal({
   useEffect(() => {
     setName(userName || '');
     setEmail(reminderEmail || (currentUser?.email || ''));
-    setGcalConnected(externalConnected !== undefined ? externalConnected : isGoogleCalendarConnected());
-    setGcalEmail(getConnectedGoogleEmail());
+    if (externalConnected !== undefined) {
+      setGcalConnected(Boolean(externalConnected));
+    }
+    if (isOpen) {
+      fetchCalendarStatus().then(connected => {
+        setGcalConnected(Boolean(connected));
+      });
+    }
+    setGcalEmail(getConnectedGoogleEmail() || currentUser?.email || null);
   }, [userName, reminderEmail, isOpen, externalConnected, currentUser]);
 
   if (!isOpen) return null;
