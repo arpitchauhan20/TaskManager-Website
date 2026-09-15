@@ -79,7 +79,6 @@ export default function App() {
 
   // Authentication & Gate State
   const [isAuthChecking, setIsAuthChecking] = useState(true);
-  const [isGuestMode, setIsGuestMode] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
@@ -133,7 +132,6 @@ export default function App() {
 
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
-    setIsGuestMode(false);
     if (user.name) setUserName(user.name);
     if (user.email) setReminderEmail(user.email);
     if (user.google_calendar_connected) {
@@ -153,7 +151,6 @@ export default function App() {
   const handleLogout = async () => {
     await AuthClient.logout();
     setCurrentUser(null);
-    setIsGuestMode(false);
     setIsCalendarConnected(false);
     showToast('info', '👋', 'You have been logged out.');
   };
@@ -819,17 +816,13 @@ export default function App() {
     );
   }
 
-  if (!currentUser && !isGuestMode) {
+  if (!currentUser) {
     return (
       <>
         <AuthGate
           initialMode={authModalMode}
           initialResetToken={urlResetToken}
           onAuthSuccess={handleAuthSuccess}
-          onEnterGuest={() => {
-            setIsGuestMode(true);
-            showToast('info', '🚀', 'Entered Guest Preview. Sign in anytime to sync across devices!');
-          }}
           onShowToast={showToast}
         />
         <ToastContainer

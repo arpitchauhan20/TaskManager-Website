@@ -36,7 +36,6 @@ export default function AuthGate({
   initialMode = 'login',
   initialResetToken = '',
   onAuthSuccess,
-  onEnterGuest,
   onShowToast
 }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register' | 'forgot' | 'reset'
@@ -480,21 +479,6 @@ export default function AuthGate({
               )}
             </button>
           </form>
-
-          {/* Quick Alternative: Guest Demo Option */}
-          <div className="authgate-divider">
-            <span>or explore directly</span>
-          </div>
-
-          <button
-            type="button"
-            className="authgate-guest-btn"
-            onClick={onEnterGuest}
-          >
-            <SparklesIcon size={16} className="authgate-guest-sparkle" />
-            <span>Launch Quick Guest Demo</span>
-            <span className="authgate-guest-tag">No sign-in required</span>
-          </button>
 
           {/* Card Footer Info */}
           <div className="authgate-card-footer">
