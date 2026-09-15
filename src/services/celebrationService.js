@@ -1,70 +1,75 @@
 import confetti from 'canvas-confetti';
 
 /**
- * Trigger intense dual-corner celebratory confetti blasts from the bottom-left and bottom-right corners
+ * Trigger elegant high-altitude dual-corner celebratory confetti blasts from the bottom-left and bottom-right corners
  */
-export function triggerDualCornerCelebration({ duration = 3000 } = {}) {
+export function triggerDualCornerCelebration({ duration = 2200 } = {}) {
   try {
     const end = Date.now() + duration;
     const colors = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#06b6d4', '#ffffff', '#ffd700'];
 
-    // 1. Initial Mega Blast from Bottom-Left and Bottom-Right Corners
+    // 1. Initial High-Altitude Dual Blast from Bottom Corners
     confetti({
-      particleCount: 130,
-      angle: 60,
-      spread: 80,
+      particleCount: 75,
+      angle: 65, // Steeper upward launch
+      spread: 60,
       origin: { x: 0, y: 1 },
       colors,
-      startVelocity: 75,
-      ticks: 350,
+      startVelocity: 95, // High launch velocity for maximum height
+      gravity: 0.82, // Floatier trajectory reaching top of screen
+      ticks: 400,
       zIndex: 99999
     });
 
     confetti({
-      particleCount: 130,
-      angle: 120,
-      spread: 80,
+      particleCount: 75,
+      angle: 115, // Steeper upward launch
+      spread: 60,
       origin: { x: 1, y: 1 },
       colors,
-      startVelocity: 75,
-      ticks: 350,
+      startVelocity: 95, // High launch velocity for maximum height
+      gravity: 0.82, // Floatier trajectory reaching top of screen
+      ticks: 400,
       zIndex: 99999
     });
 
-    // 2. Cascading High-Quantity Wave Streams from both corners
+    // 2. Controlled High-Arch Wave Streams from both corners
     const interval = setInterval(() => {
       const timeLeft = end - Date.now();
       if (timeLeft <= 0) {
         return clearInterval(interval);
       }
 
-      const particleCount = 70 * (timeLeft / duration);
+      const particleCount = 35 * (timeLeft / duration);
 
       // Bottom-Left Corner Cannon
       confetti({
         particleCount: Math.floor(particleCount),
-        angle: 55 + Math.random() * 20,
-        spread: 70,
-        origin: { x: 0, y: 0.95 },
+        angle: 62 + Math.random() * 12,
+        spread: 55,
+        origin: { x: 0, y: 0.98 },
         colors,
-        startVelocity: 60 + Math.random() * 18,
-        ticks: 280,
+        startVelocity: 85 + Math.random() * 12,
+        gravity: 0.84,
+        ticks: 350,
         zIndex: 99999
       });
 
       // Bottom-Right Corner Cannon
       confetti({
         particleCount: Math.floor(particleCount),
-        angle: 125 - Math.random() * 20,
-        spread: 70,
-        origin: { x: 1, y: 0.95 },
+        angle: 118 - Math.random() * 12,
+        spread: 55,
+        origin: { x: 1, y: 0.98 },
         colors,
-        startVelocity: 60 + Math.random() * 18,
-        ticks: 280,
+        startVelocity: 85 + Math.random() * 12,
+        gravity: 0.84,
+        ticks: 350,
         zIndex: 99999
       });
-    }, 180);
+    }, 240);
   } catch (err) {
     console.warn('Celebration trigger note:', err);
   }
 }
+
