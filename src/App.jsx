@@ -9,6 +9,7 @@ import TaskModal from './components/TaskModal';
 import SettingsModal from './components/SettingsModal';
 import ConfirmModal from './components/ConfirmModal';
 import AuthModal from './components/AuthModal';
+import AuthGate from './components/AuthGate';
 import CalendarConnectionCard from './components/CalendarConnectionCard';
 import CalendarReminderCard from './components/CalendarReminderCard';
 import ToastContainer from './components/ToastContainer';
@@ -76,7 +77,9 @@ export default function App() {
   const [taskToDeleteId, setTaskToDeleteId] = useState(null);
   const [activeDashboardBoard, setActiveDashboardBoard] = useState(null); // null (overview) | 'calendar' | 'tasks'
 
-  // Authentication State
+  // Authentication & Gate State
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
@@ -84,16 +87,21 @@ export default function App() {
 
   // Check existing session on load & listen for ?resetToken in URL
   useEffect(() => {
-    AuthClient.getCurrentUser().then(user => {
-      if (user) {
-        setCurrentUser(user);
-        if (user.name) setUserName(user.name);
-        if (user.email) setReminderEmail(user.email);
-        if (user.google_calendar_connected) {
-          setIsCalendarConnected(true);
+    AuthClient.getCurrentUser()
+      .then(user => {
+        if (user) {
+          setCurrentUser(user);
+          if (user.name) setUserName(user.name);
+          if (user.email) setReminderEmail(user.email);
+          if (user.google_calendar_connected) {
+            setIsCalendarConnected(true);
+          }
         }
-      }
-    });
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsAuthChecking(false);
+      });
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -101,7 +109,6 @@ export default function App() {
       if (token) {
         setUrlResetToken(token);
         setAuthModalMode('reset');
-        setIsAuthModalOpen(true);
       }
     }
   }, []);
@@ -126,6 +133,7 @@ export default function App() {
 
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
+    setIsGuestMode(false);
     if (user.name) setUserName(user.name);
     if (user.email) setReminderEmail(user.email);
     if (user.google_calendar_connected) {
@@ -145,6 +153,7 @@ export default function App() {
   const handleLogout = async () => {
     await AuthClient.logout();
     setCurrentUser(null);
+    setIsGuestMode(false);
     setIsCalendarConnected(false);
     showToast('info', '👋', 'You have been logged out.');
   };
@@ -800,6 +809,36 @@ export default function App() {
       }
     }
   };
+
+  if (isAuthChecking) {
+    return (
+      <div className="authgate-splash">
+        <div className="authgate-splash-spinner" />
+        <span style={{ fontSize: '13px', letterSpacing: '0.04em' }}>Initializing Secure Workspace...</span>
+      </div>
+    );
+  }
+
+  if (!currentUser && !isGuestMode) {
+    return (
+      <>
+        <AuthGate
+          initialMode={authModalMode}
+          initialResetToken={urlResetToken}
+          onAuthSuccess={handleAuthSuccess}
+          onEnterGuest={() => {
+            setIsGuestMode(true);
+            showToast('info', '🚀', 'Entered Guest Preview. Sign in anytime to sync across devices!');
+          }}
+          onShowToast={showToast}
+        />
+        <ToastContainer
+          toasts={toasts}
+          onDismiss={id => setToasts(prev => prev.filter(t => t.id !== id))}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="app-layout">

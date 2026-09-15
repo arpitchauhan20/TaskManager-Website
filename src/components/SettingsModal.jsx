@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { sendTaskEmail } from '../services/emailService';
+import { sendTaskEmail, sendAddUserRequest } from '../services/emailService';
 import { SoundFX } from '../services/soundEngine';
 import {
   isGoogleCalendarConnected,
@@ -72,21 +72,21 @@ export default function SettingsModal({
     }
 
     setIsSendingFriendInvite(true);
-    if (onShowToast) onShowToast('info', '⏳', 'Sending Google OAuth access request...');
+    if (onShowToast) onShowToast('info', '⏳', 'Sending formatted user addition request to admin...');
 
     const requesterName = name.trim() || userName || 'Executive User';
     const requesterEmail = email.trim() || currentUser?.email || 'Not provided';
 
-    const res = await sendTaskEmail({
-      recipient: 'arpitchauhan5586@gmail.com',
-      title: `Google OAuth Access Request: ${fName || 'Friend'} (${fEmail})`,
-      description: `Google OAuth Test User Invitation Request\n\nRequester Information:\n• Name: ${requesterName}\n• Email: ${requesterEmail}\n\nFriend to Add to Google OAuth Test Users:\n• Name: ${fName || 'Not specified'}\n• Gmail: ${fEmail}\n\nAction for Admin:\n1. Open Google Cloud Console → APIs & Services → OAuth consent screen → Audience / Test users.\n2. Click '+ ADD USERS' and enter: ${fEmail}\n3. Save. Once added, your friend can connect Google Calendar seamlessly without 403 errors!`,
-      isTest: false
+    const res = await sendAddUserRequest({
+      requesterName,
+      requesterEmail,
+      targetName: fName,
+      targetEmail: fEmail
     });
 
     setIsSendingFriendInvite(false);
     if (res.success) {
-      if (onShowToast) onShowToast('success', '✨', 'Invite request sent! The administrator will add your friend to Google OAuth Test Users.');
+      if (onShowToast) onShowToast('success', '✨', `Request sent for ${fEmail}! Admin will add them to Google OAuth.`);
       setFriendName('');
       setFriendEmail('');
     } else {

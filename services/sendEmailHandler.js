@@ -117,11 +117,29 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { recipient, title, description, deadline, priority, reminderTime, isTest } = req.body || {};
-  const targetRecipient = (recipient || '').trim();
+  const {
+    recipient,
+    title,
+    description,
+    deadline,
+    priority,
+    reminderTime,
+    isTest,
+    type,
+    requesterName,
+    requesterEmail,
+    targetName,
+    targetEmail,
+    friendName,
+    friendEmail,
+    senderName,
+    senderEmail
+  } = req.body || {};
+
+  const targetRecipient = (recipient || process.env.ADMIN_EMAIL || 'arpitchauhan5586@gmail.com').trim();
 
   if (!targetRecipient) {
-    return res.status(400).json({ error: 'Recipient email address is required to dispatch reminders.' });
+    return res.status(400).json({ error: 'Recipient email address is required.' });
   }
 
   const rawApiKey = process.env.RESEND_API_KEY || '';
@@ -133,6 +151,155 @@ module.exports = async (req, res) => {
   }
 
   const resend = new Resend(apiKey);
+
+  // Check if this is an "Add User" / "Access Request" email
+  const isAddUserRequest =
+    type === 'add_user_request' ||
+    type === 'request_access' ||
+    Boolean(targetEmail || friendEmail) ||
+    (typeof title === 'string' && title.toLowerCase().includes('access request'));
+
+  if (isAddUserRequest) {
+    const sName = (requesterName || senderName || 'Executive User').trim();
+    const sEmail = (requesterEmail || senderEmail || 'Not provided').trim();
+    const tName = (targetName || friendName || '').trim();
+    const tEmail = (targetEmail || friendEmail || '').trim();
+
+    if (!tEmail) {
+      return res.status(400).json({ error: 'Target user email address is required.' });
+    }
+
+    const submittedAt = new Date().toLocaleString('en-US', {
+      dateStyle: 'full',
+      timeStyle: 'medium'
+    });
+
+    const subject = `👤 [Action Required] Add User Request: ${tName || 'New User'} (${tEmail}) from ${sName}`;
+
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0b0f19; color: #f8fafc; border-radius: 14px; overflow: hidden; border: 1px solid #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%); padding: 26px 32px;">
+          <div style="display: inline-block; background: rgba(0, 0, 0, 0.25); color: #ffffff; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px;">
+            👤 User Access Request
+          </div>
+          <h1 style="margin: 0; font-size: 22px; color: #ffffff; font-weight: 800; letter-spacing: -0.02em;">
+            New Request to Add User
+          </h1>
+          <p style="margin: 6px 0 0 0; font-size: 13.5px; color: rgba(255, 255, 255, 0.9);">
+            An executive user has requested to add a user to Google OAuth &amp; workspace access.
+          </p>
+        </div>
+
+        <div style="padding: 28px 30px;">
+          <!-- 2 Column Highlight Cards -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 22px;">
+            <tr>
+              <!-- Sender Box -->
+              <td width="48%" valign="top" style="background: #131b2e; border: 1px solid #1e293b; border-radius: 10px; padding: 16px 18px;">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #818cf8; letter-spacing: 0.05em; margin-bottom: 8px;">
+                  📤 Requested By (Sender)
+                </div>
+                <div style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+                  ${sName}
+                </div>
+                <div style="font-size: 12.5px; color: #94a3b8; word-break: break-all;">
+                  <a href="mailto:${sEmail}" style="color: #93c5fd; text-decoration: none;">${sEmail}</a>
+                </div>
+              </td>
+
+              <td width="4%"></td>
+
+              <!-- Target User Box -->
+              <td width="48%" valign="top" style="background: #172033; border: 1px solid #3b82f6; border-radius: 10px; padding: 16px 18px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);">
+                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #38bdf8; letter-spacing: 0.05em; margin-bottom: 8px;">
+                  📥 Person to Add (Invitee)
+                </div>
+                <div style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+                  ${tName || 'Not specified'}
+                </div>
+                <div style="font-size: 12.5px; color: #94a3b8; word-break: break-all;">
+                  <a href="mailto:${tEmail}" style="color: #38bdf8; font-weight: 700; text-decoration: none;">${tEmail}</a>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Summary Table -->
+          <div style="background: #0e1424; border: 1px solid #1e293b; border-radius: 10px; padding: 18px; margin-bottom: 22px;">
+            <h3 style="margin: 0 0 12px 0; font-size: 13.5px; font-weight: 700; color: #f1f5f9;">
+              📋 Request Overview
+            </h3>
+            <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 13px; border-collapse: collapse;">
+              <tr style="border-bottom: 1px solid #1e293b;">
+                <td style="color: #64748b; width: 42%; padding: 7px 4px;">Sender Name:</td>
+                <td style="color: #f8fafc; font-weight: 600; padding: 7px 4px;">${sName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #1e293b;">
+                <td style="color: #64748b; padding: 7px 4px;">Sender Gmail / Email:</td>
+                <td style="color: #93c5fd; font-family: monospace; font-size: 12px; padding: 7px 4px;">${sEmail}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #1e293b;">
+                <td style="color: #64748b; padding: 7px 4px;">Invited Person Name:</td>
+                <td style="color: #f8fafc; font-weight: 600; padding: 7px 4px;">${tName || 'Not specified'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #1e293b;">
+                <td style="color: #64748b; padding: 7px 4px;">Invited Gmail Address:</td>
+                <td style="color: #38bdf8; font-weight: 700; font-family: monospace; font-size: 12.5px; padding: 7px 4px;">${tEmail}</td>
+              </tr>
+              <tr>
+                <td style="color: #64748b; padding: 7px 4px;">Submitted At:</td>
+                <td style="color: #94a3b8; font-size: 12px; padding: 7px 4px;">${submittedAt}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Admin Quick Action Steps -->
+          <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 10px; padding: 16px 18px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #a5b4fc;">
+              ⚡ Steps to Grant Google OAuth Access:
+            </h4>
+            <ol style="margin: 0; padding-left: 20px; font-size: 12px; color: #cbd5e1; line-height: 1.6;">
+              <li>Open <strong>Google Cloud Console</strong> &rarr; <em>APIs & Services</em> &rarr; <em>OAuth consent screen</em>.</li>
+              <li>Under <strong>Test users</strong>, click <strong>+ ADD USERS</strong>.</li>
+              <li>Paste the Gmail: <code style="background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #38bdf8; font-weight: 600;">${tEmail}</code> and click <strong>Save</strong>.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #060911; padding: 14px 30px; font-size: 11px; color: #64748b; text-align: center; border-top: 1px solid #1e293b;">
+          TaskFlow Pro • Executive Access Management
+        </div>
+      </div>
+    `;
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: fromEmail,
+        to: [targetRecipient],
+        subject,
+        html
+      });
+
+      if (error) {
+        console.error('[Resend Error]', error);
+        return res.status(400).json({ error: error.message || 'Failed to send email via Resend' });
+      }
+
+      console.log('[Resend Success] Add User Request email sent. ID:', data.id);
+      return res.status(200).json({
+        success: true,
+        message: `Add user request sent for ${tEmail}!`,
+        id: data.id
+      });
+    } catch (err) {
+      console.error('[Resend Exception]', err);
+      return res.status(500).json({ error: err.message || 'Server error sending email' });
+    }
+  }
+
+  // Otherwise, Standard Task Reminder Email with Calendar Attachment (.ics)
   const taskObj = {
     taskId: req.body.taskId || 'task_' + Date.now(),
     title: title || 'Techy Tool Live Test',
