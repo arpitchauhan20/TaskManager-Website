@@ -809,9 +809,24 @@ export default function App() {
 
   if (isAuthChecking) {
     return (
-      <div className="authgate-splash">
-        <div className="authgate-splash-spinner" />
-        <span style={{ fontSize: '13px', letterSpacing: '0.04em' }}>Initializing Secure Workspace...</span>
+      <div className="smart-preloader">
+        <div className="preloader-glow-orb" />
+        <div className="preloader-card">
+          <div className="preloader-logo-ring">
+            <div className="preloader-spinner-ring" />
+            <div className="preloader-logo-core">
+              <ZapIcon size={22} />
+            </div>
+          </div>
+          <div className="preloader-title-row">
+            <span className="preloader-title">TaskFlow</span>
+            <span className="preloader-tag">PRO</span>
+          </div>
+          <div className="preloader-bar-track">
+            <div className="preloader-bar-fill" />
+          </div>
+          <span className="preloader-status">Initializing workspace...</span>
+        </div>
       </div>
     );
   }

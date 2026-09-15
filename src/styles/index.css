@@ -5636,8 +5636,11 @@ html, body {
   text-decoration: underline;
 }
 
-/* Loading Splash for Auth Init */
+/* Loading Splash & Smart Preloader */
+.smart-preloader,
 .authgate-splash {
+  position: fixed;
+  inset: 0;
   min-height: 100vh;
   width: 100%;
   background-color: #06080e;
@@ -5645,9 +5648,135 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  color: #94a3b8;
+  gap: 20px;
+  z-index: 999999;
+  overflow: hidden;
   font-family: var(--font-sans, sans-serif);
+}
+
+.preloader-glow-orb {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, rgba(168, 85, 247, 0.12) 45%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: preloaderPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes preloaderPulse {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(1.15); opacity: 0.85; }
+}
+
+.preloader-card {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 32px 40px;
+  background: rgba(13, 19, 33, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.15);
+  animation: authCardIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.preloader-logo-ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preloader-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #6366f1;
+  border-right-color: #a855f7;
+  animation: preloaderSpin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+}
+
+.preloader-logo-core {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
+
+@keyframes preloaderSpin {
+  to { transform: rotate(360deg); }
+}
+
+.preloader-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preloader-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.preloader-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.preloader-bar-track {
+  width: 180px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.preloader-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+  border-radius: 9999px;
+  animation: preloaderBar 1.4s ease-in-out infinite;
+}
+
+@keyframes preloaderBar {
+  0% { left: -45%; }
+  100% { left: 100%; }
+}
+
+.preloader-status {
+  font-size: 12px;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+  font-weight: 500;
 }
 
 .authgate-splash-spinner {
