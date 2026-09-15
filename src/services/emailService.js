@@ -2,7 +2,7 @@
 // Resend HTTPS Email Dispatch Service
 // ==========================================
 
-export async function sendTaskEmail({ taskId, recipient, title, description, deadline, priority, isTest = false }) {
+export async function sendTaskEmail({ taskId, recipient, title, description, deadline, priority, reminderTime, isTest = false }) {
   try {
     const res = await fetch('/api/send-email', {
       method: 'POST',
@@ -14,6 +14,7 @@ export async function sendTaskEmail({ taskId, recipient, title, description, dea
         description,
         deadline,
         priority,
+        reminderTime,
         isTest
       })
     });

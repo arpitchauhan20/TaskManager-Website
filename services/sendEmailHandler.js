@@ -65,13 +65,17 @@ function generateICSInvite(task, recipientEmail) {
 }
 
 // Helper to generate direct 1-click Google Calendar URL for the deadline date and time
-function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd) {
+function getGoogleCalendarUrl(task, deadlineStart, deadlineEnd, recipientEmail = '') {
   const formatGCalDate = d => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
   const title = encodeURIComponent(`🎯 Deadline: ${task.title || 'Task Reminder'}`);
   const details = encodeURIComponent(
     `Task: ${task.title || ''}\nDeadline: ${deadlineStart.toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Techy Tool`
   );
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
+  let url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatGCalDate(deadlineStart)}/${formatGCalDate(deadlineEnd)}&details=${details}`;
+  if (recipientEmail) {
+    url += `&add=${encodeURIComponent(recipientEmail)}`;
+  }
+  return url;
 }
 
 // Helper: Sanitize & format Resend 'from' address to prevent 422 validation errors
@@ -311,7 +315,7 @@ module.exports = async (req, res) => {
 
   const deadlineStart = new Date(taskObj.deadline);
   const deadlineEnd = new Date(deadlineStart.getTime() + 30 * 60 * 1000);
-  const gcalUrl = getGoogleCalendarUrl(taskObj, deadlineStart, deadlineEnd);
+  const gcalUrl = getGoogleCalendarUrl(taskObj, deadlineStart, deadlineEnd, targetRecipient);
 
   const icsContent = generateICSInvite(taskObj, targetRecipient);
   const icsBase64 = Buffer.from(icsContent).toString('base64');

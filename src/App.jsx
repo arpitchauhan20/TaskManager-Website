@@ -350,6 +350,7 @@ export default function App() {
           // Automated email alert dispatched exactly when scheduled reminder time arrives
           if (task.channels?.email && (task.reminderEmail || reminderEmail) && !task.reminderEmailSent) {
             task.reminderEmailSent = true;
+            hasUpdates = true;
             const target = task.reminderEmail || reminderEmail;
             sendTaskEmail({
               taskId: task.id,
@@ -634,9 +635,10 @@ export default function App() {
 
     const targetEmail = (taskData.reminderEmail || reminderEmail || '').trim();
 
-    // 2. Direct Delivery for ANY user (Public & Universal):
-    // If a Gmail/Email is provided and Calendar or Email channels are active, dispatch immediately
-    if (targetEmail && (taskData.channels?.calendar || taskData.channels?.email)) {
+    // 2. Email Delivery:
+    // If the reminder is set for the future, DO NOT send instantly!
+    // The email is dispatched automatically at the scheduled reminder time.
+    if (!isFutureReminder && targetEmail && taskData.channels?.email) {
       sendTaskEmail({
         taskId: savedTask.id,
         recipient: targetEmail,
@@ -648,27 +650,30 @@ export default function App() {
       }).then(res => {
         if (res?.success) {
           savedTask.reminderEmailSent = true;
-          showToast('success', '📧', `Task & Google Calendar invite sent to ${targetEmail}!`);
+          showToast('success', '📧', `Reminder email sent to ${targetEmail}!`);
         } else {
-          console.warn('Email/calendar delivery notice:', res?.error);
+          console.warn('Email delivery notice:', res?.error);
         }
       });
     }
 
-    // 3. Silent Google Calendar REST API Auto-Save (only if user explicitly authorized OAuth)
-    if (taskData.channels?.calendar && savedTask.deadline && isGoogleCalendarConnected()) {
+    // 3. Google Calendar Sync:
+    if (taskData.channels?.calendar && savedTask.deadline) {
       saveEventToGoogleCalendar(savedTask, targetEmail).then(gcalRes => {
         if (gcalRes?.success) {
-          showToast('success', '📅', 'Auto-saved directly to Google Calendar!');
+          showToast('success', '📅', 'Event & reminder synced to Google Calendar!');
+        } else if (gcalRes?.needAuth) {
+          showToast('info', '📅', 'Click Calendar icon on task to open in Google Calendar');
         }
       }).catch(err => {
-        console.warn('Silent Google Calendar sync note:', err);
+        console.warn('Google Calendar sync note:', err);
       });
     }
 
     if (isFutureReminder && taskData.channels?.email) {
+      const formattedDate = new Date(remMs).toLocaleDateString([], { month: 'short', day: 'numeric' });
       const formattedTime = new Date(remMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      showToast('info', '⏰', `Email reminder scheduled for ${formattedTime}`);
+      showToast('info', '⏰', `Email reminder scheduled for ${formattedDate} at ${formattedTime}`);
     }
 
     setIsTaskModalOpen(false);

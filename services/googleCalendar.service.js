@@ -283,7 +283,11 @@ class GoogleCalendarService {
         overrides: [
           {
             method: 'popup',
-            minutes: Math.max(0, parseInt(reminderMinutes, 10) || 10)
+            minutes: Math.max(0, reminderMinutes !== undefined ? parseInt(reminderMinutes, 10) : 15)
+          },
+          {
+            method: 'email',
+            minutes: Math.max(0, reminderMinutes !== undefined ? parseInt(reminderMinutes, 10) : 15)
           }
         ]
       }

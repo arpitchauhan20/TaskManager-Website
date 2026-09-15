@@ -240,10 +240,6 @@ export async function fetchPrimaryCalendarInfo(token) {
  */
 export async function saveEventToGoogleCalendar(task, fallbackEmail = '') {
   const token = getGoogleAccessToken();
-  if (!token) {
-    return { success: false, needAuth: true, error: 'Google Calendar is not connected.' };
-  }
-
   const deadline = task.deadline ? new Date(task.deadline) : new Date(Date.now() + 3600000);
   const deadlineEnd = new Date(deadline.getTime() + 30 * 60 * 1000); // 30 min duration
   const targetEmail = (task.reminderEmail || fallbackEmail || getConnectedGoogleEmail() || '').trim();
@@ -266,74 +262,92 @@ export async function saveEventToGoogleCalendar(task, fallbackEmail = '') {
     }
   }
 
-  const offsetMinutes = Math.max(1, Math.round((deadline.getTime() - remMs) / 60000));
+  const offsetMinutes = Math.max(0, Math.round((deadline.getTime() - remMs) / 60000));
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
-  const eventPayload = {
-    summary: `🎯 Deadline: ${task.title}`,
-    description: `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${new Date(remMs).toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Techy Tool: ${typeof window !== 'undefined' ? window.location.origin : 'https://techytool.vercel.app'}`,
-    start: {
-      dateTime: deadline.toISOString(),
-      timeZone
-    },
-    end: {
-      dateTime: deadlineEnd.toISOString(),
-      timeZone
-    },
-    // Inviting the user's specified Gmail ID places the event directly onto their Google Calendar
-    ...(targetEmail ? {
-      attendees: [
-        {
-          email: targetEmail,
-          displayName: targetEmail.split('@')[0],
-          responseStatus: 'accepted'
-        }
-      ]
-    } : {}),
-    reminders: {
-      useDefault: false,
-      overrides: [
-        { method: 'popup', minutes: offsetMinutes },
-        { method: 'email', minutes: offsetMinutes }
-      ]
-    }
-  };
-
-  try {
-    // sendUpdates=all ensures Google Calendar dispatches the event directly to the target Gmail ID's calendar
-    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+  // 1. If Client GIS Access Token is active:
+  if (token) {
+    const eventPayload = {
+      summary: `🎯 Deadline: ${task.title}`,
+      description: `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${new Date(remMs).toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Techy Tool: ${typeof window !== 'undefined' ? window.location.origin : 'https://techytool.vercel.app'}`,
+      start: {
+        dateTime: deadline.toISOString(),
+        timeZone
       },
-      body: JSON.stringify(eventPayload)
+      end: {
+        dateTime: deadlineEnd.toISOString(),
+        timeZone
+      },
+      ...(targetEmail ? {
+        attendees: [
+          {
+            email: targetEmail,
+            displayName: targetEmail.split('@')[0],
+            responseStatus: 'accepted'
+          }
+        ]
+      } : {}),
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: 'popup', minutes: offsetMinutes },
+          { method: 'email', minutes: offsetMinutes }
+        ]
+      }
+    };
+
+    try {
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventPayload)
+      });
+
+      if (response.status === 401) {
+        disconnectGoogleCalendar();
+      } else if (response.ok) {
+        const data = await response.json();
+        return {
+          success: true,
+          htmlLink: data.htmlLink,
+          id: data.id,
+          summary: data.summary,
+          targetEmail
+        };
+      }
+    } catch (err) {
+      console.warn('Client Google API direct save failed:', err);
+    }
+  }
+
+  // 2. Fallback to Backend Google Calendar OAuth (if connected on server)
+  try {
+    const backendRes = await createCalendarReminder({
+      title: task.title,
+      description: `Task: ${task.title}\nDeadline: ${deadline.toLocaleString()}\n⏰ Reminder Alert set for: ${new Date(remMs).toLocaleString()}\nPriority: ${(task.priority || 'medium').toUpperCase()}${task.description ? '\n\n' + task.description : ''}\n\nManaged via Techy Tool`,
+      startTime: deadline.toISOString(),
+      endTime: deadlineEnd.toISOString(),
+      reminderMinutes: offsetMinutes,
+      timeZone
     });
 
-    if (response.status === 401) {
-      // Token expired or revoked
-      disconnectGoogleCalendar();
-      return { success: false, needAuth: true, error: 'Google Calendar session expired. Please reconnect.' };
+    if (backendRes && backendRes.success) {
+      return {
+        success: true,
+        htmlLink: backendRes.event?.htmlLink,
+        id: backendRes.event?.id,
+        summary: task.title,
+        targetEmail
+      };
     }
-
-    if (!response.ok) {
-      const errJson = await response.json().catch(() => ({}));
-      const msg = errJson.error?.message || `Google Calendar API returned status ${response.status}`;
-      return { success: false, error: msg };
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      htmlLink: data.htmlLink,
-      id: data.id,
-      summary: data.summary,
-      targetEmail
-    };
-  } catch (err) {
-    console.error('Error saving directly to Google Calendar:', err);
-    return { success: false, error: err.message || 'Failed to communicate with Google Calendar API.' };
+  } catch (backendErr) {
+    // backend not connected or error
   }
+
+  return { success: false, needAuth: true, error: 'Google Calendar is not connected.' };
 }
 
 export function formatGCalDate(date) {
@@ -415,18 +429,18 @@ export function downloadICS(task) {
   const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//TaskFlow Pro//Deadline Calendar Engine//EN',
+    'PRODID:-//Techy Tool//Deadline Calendar Engine//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
 
     // --- SCHEDULED DEADLINE EVENT WITH EMBEDDED REMINDER ALARM ---
     'BEGIN:VEVENT',
-    `UID:taskflow_${taskId}@taskflow.pro`,
+    `UID:techytool_${taskId}@techytool.pro`,
     `DTSTAMP:${formatICS(now)}`,
     `DTSTART:${formatICS(deadline)}`,
     `DTEND:${formatICS(deadlineEnd)}`,
     `SUMMARY:🎯 Deadline: ${cleanTitle}`,
-    `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadline.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${desc}\\n\\nManaged via TaskFlow Pro`,
+    `DESCRIPTION:Task: ${cleanTitle}\\nDeadline: ${deadline.toLocaleString()}\\nPriority: ${priorityStr}\\n\\n${desc}\\n\\nManaged via Techy Tool`,
     'STATUS:CONFIRMED',
     'SEQUENCE:0',
     'BEGIN:VALARM',
