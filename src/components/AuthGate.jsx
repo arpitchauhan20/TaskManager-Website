@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
+import { triggerDualCornerCelebration } from '../services/celebrationService';
 import { AuthClient } from '../services/authClient';
 import {
   ZapIcon,
@@ -71,14 +71,7 @@ export default function AuthGate({
   };
 
   const triggerConfetti = () => {
-    try {
-      confetti({
-        particleCount: 75,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981']
-      });
-    } catch {}
+    triggerDualCornerCelebration({ duration: 3200 });
   };
 
   const handleSubmit = async (e) => {

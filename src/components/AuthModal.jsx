@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthClient } from '../services/authClient';
+import { triggerDualCornerCelebration } from '../services/celebrationService';
 import {
   XIcon,
   AlertTriangleIcon,
@@ -119,6 +120,7 @@ export default function AuthModal({
     try {
       if (mode === 'login') {
         const res = await AuthClient.login({ email, password });
+        triggerDualCornerCelebration({ duration: 3200 });
         onAuthSuccess(res.user);
         onShowToast('success', 'sparkles', `Welcome back, ${res.user.name || 'Executive'}!`);
         onClose();
@@ -130,6 +132,7 @@ export default function AuthModal({
           throw new Error('Password must be at least 8 characters long.');
         }
         const res = await AuthClient.register({ name, email, password });
+        triggerDualCornerCelebration({ duration: 3200 });
         onAuthSuccess(res.user);
         onShowToast('success', 'sparkles', `Account created! Welcome, ${res.user.name}.`);
         onClose();
