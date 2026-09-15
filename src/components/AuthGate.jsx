@@ -159,35 +159,48 @@ export default function AuthGate({
                 <ZapIcon size={22} />
               </div>
               <div className="authgate-logo-text">
-                <span className="authgate-logo-title">TaskFlow</span>
+                <span className="authgate-logo-title">Techy Tool</span>
                 <span className="authgate-logo-tag">PRO</span>
               </div>
             </div>
-            <span className="authgate-edition-pill">v2.0 Executive Edition</span>
+            <span className="authgate-edition-pill">v2.0 Automations &amp; Helping Tools</span>
           </div>
 
           <div className="authgate-hero-text">
             <h1 className="authgate-headline">
-              Executive Task Management <br />
-              <span className="text-gradient-neon">Reimagined for Leaders.</span>
+              All-in-One Helping Tools <br />
+              <span className="text-gradient-neon">&amp; Smart Automations Suite.</span>
             </h1>
             <p className="authgate-subtext">
-              Synchronize high-priority execution, automate Google Calendar events, and trigger smart deadline reminders across all your devices.
+              Accelerate your daily execution with a complete package of intelligent productivity helpers — automated Google Calendar sync, deadline alarms, and live telemetry in one unified workspace.
             </p>
           </div>
 
-          {/* Feature Showcase Cards */}
+          {/* Feature Showcase Cards: Complete Package of Helping Tools */}
           <div className="authgate-feature-cards">
+            <div className="authgate-feature-card">
+              <div className="authgate-feature-icon zap">
+                <ZapIcon size={20} />
+              </div>
+              <div className="authgate-feature-info">
+                <div className="authgate-feature-title-row">
+                  <h4>Smart Task &amp; Workflow Automations</h4>
+                  <span className="authgate-mini-badge highlight">Automated</span>
+                </div>
+                <p>Instant deadline calculations, auto-sorted priority queues, and intelligent task scheduling with zero manual friction.</p>
+              </div>
+            </div>
+
             <div className="authgate-feature-card">
               <div className="authgate-feature-icon cal">
                 <CalendarIcon size={20} />
               </div>
               <div className="authgate-feature-info">
                 <div className="authgate-feature-title-row">
-                  <h4>Google Calendar Bi-Directional Sync</h4>
-                  <span className="authgate-mini-badge">Automated</span>
+                  <h4>Bi-Directional Google Calendar Sync</h4>
+                  <span className="authgate-mini-badge">Live Bridge</span>
                 </div>
-                <p>Instantly export deadlines to Google Calendar or schedule with one-click ICS exports.</p>
+                <p>Automatic Google Calendar event generation, 1-click scheduling, and seamless .ics invitation exports.</p>
               </div>
             </div>
 
@@ -197,23 +210,23 @@ export default function AuthGate({
               </div>
               <div className="authgate-feature-info">
                 <div className="authgate-feature-title-row">
-                  <h4>Intelligent Alert Dispatcher</h4>
+                  <h4>Multi-Channel Alert Dispatcher</h4>
                   <span className="authgate-mini-badge highlight">Zero Drift</span>
                 </div>
-                <p>Auditory chimes, push alerts, and direct Resend email deliveries configured to your schedule.</p>
+                <p>Harmonic audio chimes, native push notifications, and automated Resend email delivery dispatched right on time.</p>
               </div>
             </div>
 
             <div className="authgate-feature-card">
-              <div className="authgate-feature-icon zap">
+              <div className="authgate-feature-icon zap" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', borderColor: 'rgba(6, 182, 212, 0.25)' }}>
                 <ClockIcon size={20} />
               </div>
               <div className="authgate-feature-info">
                 <div className="authgate-feature-title-row">
-                  <h4>Execution Telemetry</h4>
+                  <h4>Productivity Telemetry &amp; Cloud Hub</h4>
                   <span className="authgate-mini-badge">Encrypted</span>
                 </div>
-                <p>Live priority streams, overdue mitigation, and focus analytics built for peak clarity.</p>
+                <p>Real-time execution analytics, overdue mitigation alerts, and secure cloud synchronization across all devices.</p>
               </div>
             </div>
           </div>
@@ -221,14 +234,14 @@ export default function AuthGate({
           {/* Social Proof & Trust Strip */}
           <div className="authgate-trust-footer">
             <div className="authgate-avatar-stack">
-              <div className="avatar av-1">JD</div>
-              <div className="avatar av-2">AC</div>
-              <div className="avatar av-3">EM</div>
+              <div className="avatar av-1">TT</div>
+              <div className="avatar av-2">JD</div>
+              <div className="avatar av-3">AC</div>
               <div className="avatar av-4">SR</div>
             </div>
             <div className="authgate-trust-text">
               <div className="authgate-stars">★★★★★</div>
-              <span>Trusted by executive teams &amp; independent builders</span>
+              <span>Powering executive workflows, engineering teams &amp; builders</span>
             </div>
           </div>
         </div>
@@ -259,14 +272,14 @@ export default function AuthGate({
           <div className="authgate-card-header">
             {mode === 'login' && (
               <>
-                <h2 className="authgate-card-title">Welcome Back</h2>
-                <p className="authgate-card-desc">Sign in to resume your executive workspace.</p>
+                <h2 className="authgate-card-title">Welcome to Techy Tool</h2>
+                <p className="authgate-card-desc">Sign in to access your intelligent tools &amp; automations suite.</p>
               </>
             )}
             {mode === 'register' && (
               <>
-                <h2 className="authgate-card-title">Get Started with TaskFlow</h2>
-                <p className="authgate-card-desc">Create your private, synchronized workspace in seconds.</p>
+                <h2 className="authgate-card-title">Get Started with Techy Tool</h2>
+                <p className="authgate-card-desc">Create your private workspace and activate all smart automation tools.</p>
               </>
             )}
             {mode === 'forgot' && (
@@ -284,7 +297,7 @@ export default function AuthGate({
                   <ArrowLeftIcon size={14} /> Back to Sign In
                 </button>
                 <h2 className="authgate-card-title" style={{ marginTop: '12px' }}>Set New Password</h2>
-                <p className="authgate-card-desc">Choose a strong, new password for your account.</p>
+                <p className="authgate-card-desc">Choose a strong, new password for your Techy Tool account.</p>
               </>
             )}
           </div>

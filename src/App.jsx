@@ -809,23 +809,31 @@ export default function App() {
 
   if (isAuthChecking) {
     return (
-      <div className="smart-preloader">
-        <div className="preloader-glow-orb" />
-        <div className="preloader-card">
-          <div className="preloader-logo-ring">
-            <div className="preloader-spinner-ring" />
-            <div className="preloader-logo-core">
-              <ZapIcon size={22} />
+      <div className="techy-preloader">
+        <div className="techy-preloader-grid" />
+        <div className="techy-preloader-orb" />
+        <div className="techy-preloader-box">
+          <div className="techy-orbital-wrap">
+            <div className="techy-ring-outer" />
+            <div className="techy-ring-inner" />
+            <div className="techy-logo-core">
+              <ZapIcon size={24} />
             </div>
           </div>
-          <div className="preloader-title-row">
-            <span className="preloader-title">TaskFlow</span>
-            <span className="preloader-tag">PRO</span>
+          <div className="techy-brand-wrap">
+            <div className="techy-brand-title">
+              <span>Techy Tool</span>
+              <span className="techy-brand-tag">PRO</span>
+            </div>
+            <span className="techy-brand-subtitle">Smart Automations &amp; Helping Tools</span>
           </div>
-          <div className="preloader-bar-track">
-            <div className="preloader-bar-fill" />
+          <div className="techy-bar-track">
+            <div className="techy-bar-fill" />
           </div>
-          <span className="preloader-status">Initializing workspace...</span>
+          <div className="techy-telemetry-text">
+            <span className="techy-telemetry-dot" />
+            <span>Loading automation tools...</span>
+          </div>
         </div>
       </div>
     );
@@ -1087,9 +1095,9 @@ export default function App() {
             {/* Left Spacer for balanced center alignment */}
             <div className="footer-grid-left" />
 
-            {/* Center: 2026 TaskFlow Copyright */}
+            {/* Center: 2026 Techy Tool Copyright */}
             <div className="footer-grid-center">
-              <span className="footer-copyright">© {new Date().getFullYear()} TaskFlow Pro</span>
+              <span className="footer-copyright">© {new Date().getFullYear()} Techy Tool • Automations &amp; Helping Tools</span>
             </div>
 
             {/* Right: All Navigation & Support Links */}
